@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.unimarketplace.ui.auth.AuthScreen
 import com.example.unimarketplace.ui.theme.UniMarketplaceTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,9 +21,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             UniMarketplaceTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        // commento
+                    AuthScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
