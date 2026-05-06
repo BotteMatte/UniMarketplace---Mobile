@@ -15,7 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.unimarketplace.ui.marketplace.MarketplaceScreen
+import com.example.unimarketplace.ui.navigation.AppNavigation
 import com.example.unimarketplace.ui.theme.UniMarketplaceTheme
 
 class MainActivity : ComponentActivity() {
@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
 
             UniMarketplaceTheme(darkTheme = isDarkTheme) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MarketplaceScreen(
+                    AppNavigation(
                         modifier = Modifier.padding(innerPadding),
                         isDarkTheme = isDarkTheme,
                         onThemeToggle = { isDarkTheme = !isDarkTheme }

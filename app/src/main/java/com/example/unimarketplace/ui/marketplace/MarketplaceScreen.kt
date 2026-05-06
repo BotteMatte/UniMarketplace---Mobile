@@ -34,7 +34,12 @@ import androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun MarketplaceScreenPreview() {
     MaterialTheme {
-        MarketplaceScreen(isDarkTheme = false, onThemeToggle = {})
+        MarketplaceScreen(
+            isDarkTheme = false,
+            onThemeToggle = {},
+            onNavigateToLogin = {},
+            onNavigateToRegister = {}
+        )
     }
 }
 
@@ -43,7 +48,9 @@ fun MarketplaceScreenPreview() {
 fun MarketplaceScreen(
     modifier: Modifier = Modifier,
     isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit
+    onThemeToggle: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -81,7 +88,9 @@ fun MarketplaceScreen(
                         DrawerContent(
                             onClose = { scope.launch { drawerState.close() } },
                             isDarkTheme = isDarkTheme,
-                            onThemeToggle = onThemeToggle
+                            onThemeToggle = onThemeToggle,
+                            onNavigateToLogin = onNavigateToLogin,
+                            onNavigateToRegister = onNavigateToRegister
                         )
                     }
                 }
@@ -380,7 +389,9 @@ fun MarketplaceItemCard(isDarkTheme: Boolean) {
 fun DrawerContent(
     onClose: () -> Unit,
     isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit
+    onThemeToggle: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -416,7 +427,10 @@ fun DrawerContent(
             // Auth Buttons
             // Fix Dark Mode: Pulsante Login bianco con scritta nera in Dark Mode
             Button(
-                onClick = { /* TODO */ },
+                onClick = {
+                    onClose()
+                    onNavigateToLogin()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -436,7 +450,10 @@ fun DrawerContent(
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
-                onClick = { /* TODO */ },
+                onClick = {
+                    onClose()
+                    onNavigateToRegister()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

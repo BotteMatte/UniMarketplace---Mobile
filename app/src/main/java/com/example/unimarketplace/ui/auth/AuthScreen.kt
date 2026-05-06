@@ -25,8 +25,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun AuthScreen(modifier: Modifier = Modifier) {
-    var isLoginMode by remember { mutableStateOf(true) }
+fun AuthScreen(
+    modifier: Modifier = Modifier,
+    isLoginModeInitial: Boolean = true,
+    onBack: () -> Unit = {}
+) {
+    var isLoginMode by remember { mutableStateOf(isLoginModeInitial) }
 
     Column(
         modifier = modifier
@@ -38,6 +42,7 @@ fun AuthScreen(modifier: Modifier = Modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable { onBack() }
                 .padding(vertical = 20.dp, horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
