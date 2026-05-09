@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
+import androidx.room.ColumnInfo
 
 @Entity(tableName = "preferiti",
     foreignKeys = [
@@ -14,6 +15,6 @@ import androidx.room.Index
 )
 data class PreferitiEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val utenteId: Long,
-    val annuncioId: Long
+    @ColumnInfo(name = "utente_id") val utenteId: Long,
+    @ColumnInfo(name = "annuncio_id") val annuncioId: Long
 )

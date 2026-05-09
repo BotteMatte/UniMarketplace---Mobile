@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
+import androidx.room.ColumnInfo
 
 @Entity(tableName = "annunci",
     foreignKeys = [ForeignKey(entity = UtenteEntity::class, parentColumns = ["id"], childColumns = ["venditoreId"], onDelete = ForeignKey.CASCADE)],
@@ -16,9 +17,9 @@ data class AnnuncioEntity(
     val prezzo: Double,
     val categoria: String,
     val condizioni: String,
-    val immagineUrl: String?,
-    val dataPubblicazione: Long,
-    val venditoreId: Long,
-    val venditoreNome: String,
-    val isVenduto: Boolean = false
+    @ColumnInfo(name = "immagine_url") val immagineUrl: String?,
+    @ColumnInfo(name = "data_pubblicazione") val dataPubblicazione: Long,
+    @ColumnInfo(name = "venditore_id") val venditoreId: Long,
+    @ColumnInfo(name = "venditore_nome") val venditoreNome: String,
+    @ColumnInfo(name = "is_venduto") val isVenduto: Boolean = false
 )
