@@ -8,10 +8,10 @@ import androidx.room.ColumnInfo
 
 @Entity(tableName = "preferiti",
     foreignKeys = [
-        ForeignKey(entity = UtenteEntity::class, parentColumns = ["id"], childColumns = ["utenteId"], onDelete = ForeignKey.CASCADE),
-        ForeignKey(entity = AnnuncioEntity::class, parentColumns = ["id"], childColumns = ["annuncioId"], onDelete = ForeignKey.CASCADE)
+        ForeignKey(entity = UtenteEntity::class, parentColumns = ["id"], childColumns = ["utente_id"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = AnnuncioEntity::class, parentColumns = ["id"], childColumns = ["annuncio_id"], onDelete = ForeignKey.CASCADE)
     ],
-    indices = [Index(value = ["utenteId", "annuncioId"], unique = true)]
+    indices = [Index(value = ["utente_id", "annuncio_id"], unique = true)]
 )
 data class PreferitiEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,

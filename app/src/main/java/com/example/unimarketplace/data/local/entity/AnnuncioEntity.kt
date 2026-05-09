@@ -7,8 +7,8 @@ import androidx.room.Index
 import androidx.room.ColumnInfo
 
 @Entity(tableName = "annunci",
-    foreignKeys = [ForeignKey(entity = UtenteEntity::class, parentColumns = ["id"], childColumns = ["venditoreId"], onDelete = ForeignKey.CASCADE)],
-    indices = [Index("venditoreId"), Index("categoria")]
+    foreignKeys = [ForeignKey(entity = UtenteEntity::class, parentColumns = ["id"], childColumns = ["venditore_id"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index("venditore_id"), Index("categoria")]
 )
 data class AnnuncioEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
