@@ -6,7 +6,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.example.unimarketplace.ui.auth.AuthScreen
+import com.example.unimarketplace.ui.marketplace.AnnuncioDetailScreen
 import com.example.unimarketplace.ui.marketplace.MarketplaceScreen
 
 /**
@@ -16,6 +19,9 @@ sealed class Screen(val route: String) {
     object Marketplace : Screen("marketplace")
     object Login : Screen("login")
     object Register : Screen("register")
+    object AnnuncioDetail : Screen("annuncio/{annuncioId}") {
+        fun createRoute(annuncioId: Long) = "annuncio/$annuncioId"
+    }
 }
 
 @Composable
@@ -53,6 +59,18 @@ fun AppNavigation(
             AuthScreen(
                 isLoginModeInitial = false,
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Schermata Dettaglio Annuncio
+        composable(
+            Screen.AnnuncioDetail.route,
+            arguments = listOf(navArgument("annuncioId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val annuncioId = backStackEntry.arguments?.getLong("annuncioId") ?: return@composable
+            AnnuncioDetailScreen(
+                annuncioId = annuncioId,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
