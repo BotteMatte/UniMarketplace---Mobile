@@ -21,4 +21,19 @@ class UserRepositoryImpl(private val userDao: UserDao) : UserRepository {
         userDao.insertUser(newUser)
         return true
     }
+
+    override suspend fun loginWithGoogle(email: String, fullName: String): UserEntity {
+        val existingUser = userDao.getUserByEmail(email)
+        return if (existingUser != null) {
+            existingUser
+        } else {
+            val newUser = UserEntity(
+                fullName = fullName,
+                email = email,
+                password = "" // Google users don't have a local password
+            )
+            userDao.insertUser(newUser)
+            userDao.getUserByEmail(email)!!
+        }
+    }
 }

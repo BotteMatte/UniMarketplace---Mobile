@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "793873937487",
+    "project_id": "unimarketplace-ba843",
+    "storage_bucket": "unimarketplace-ba843.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:793873937487:android:9d93772a2f602f6066a63a",
+        "android_client_info": {
+          "package_name": "com.example.unimarketplace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAk2UVQCPq59maru_QFFCLRU0utK5LU54Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
