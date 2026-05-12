@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.unimarketplace.data.local.AppDatabase
+import com.example.unimarketplace.data.local.SessionManager
 import com.example.unimarketplace.data.repository.UserRepositoryImpl
 import com.example.unimarketplace.ui.auth.AuthScreen
 import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
@@ -45,13 +46,14 @@ fun AppNavigation(
     val context = LocalContext.current
     val database = AppDatabase.getDatabase(context)
     val userRepository = UserRepositoryImpl(database.userDao())
+    val sessionManager = SessionManager(context)
 
     val authViewModel: AuthViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
                     @Suppress("UNCHECKED_CAST")
-                    return AuthViewModel(userRepository) as T
+                    return AuthViewModel(userRepository, sessionManager) as T
                 }
                 throw IllegalArgumentException("Unknown ViewModel class")
             }

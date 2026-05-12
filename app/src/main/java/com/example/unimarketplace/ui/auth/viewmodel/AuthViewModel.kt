@@ -3,18 +3,22 @@ package com.example.unimarketplace.ui.auth.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.unimarketplace.domain.repository.UserRepository
+import com.example.unimarketplace.data.local.SessionManager
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val repository: UserRepository) : ViewModel() {
+class AuthViewModel(
+    private val repository: UserRepository,
+    private val sessionManager: SessionManager
+) : ViewModel() {
 
     private val _authResult = MutableSharedFlow<AuthResult>()
     val authResult = _authResult.asSharedFlow()
 
-    private val _currentUser = MutableStateFlow<String?>(null)
+    private val _currentUser = MutableStateFlow<String?>(sessionManager.getUserName())
     val currentUser = _currentUser.asStateFlow()
 
     fun login(email: String, password: String) {
@@ -22,6 +26,7 @@ class AuthViewModel(private val repository: UserRepository) : ViewModel() {
             val user = repository.login(email, password)
             if (user != null) {
                 _currentUser.value = user.fullName
+                sessionManager.saveUserName(user.fullName)
                 _authResult.emit(AuthResult.Success("Benvenuto, ${user.fullName}!"))
             } else {
                 _authResult.emit(AuthResult.Error("Credenziali errate."))
@@ -46,6 +51,7 @@ class AuthViewModel(private val repository: UserRepository) : ViewModel() {
 
     fun logout() {
         _currentUser.value = null
+        sessionManager.clearSession()
     }
 
     sealed class AuthResult {

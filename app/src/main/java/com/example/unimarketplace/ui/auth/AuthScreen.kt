@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun AuthScreen(
@@ -47,13 +48,13 @@ fun AuthScreen(
         viewModel.authResult.collect { result ->
             when (result) {
                 is AuthViewModel.AuthResult.Success -> {
-                    snackbarHostState.showSnackbar(result.message)
-                    // Attendi 2 secondi prima di tornare alla home o switchare
-                    delay(2000)
                     if (isLoginMode) {
                         onSuccess()
                     } else {
-                        isLoginMode = true // Passa al login dopo la registrazione
+                        // Mostra il messaggio di registrazione e passa al login
+                        scope.launch { snackbarHostState.showSnackbar(result.message) }
+                        delay(500)
+                        isLoginMode = true
                     }
                 }
                 is AuthViewModel.AuthResult.Error -> {
