@@ -24,7 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun CartScreenPreview() {
     MaterialTheme {
-        CartScreen(onNavigateBack = {}, onContinueShopping = {})
+        CartScreen(onNavigateBack = {}, onContinueShopping = {}, isDarkTheme = false)
     }
 }
 
@@ -41,7 +41,8 @@ data class CartItem(
 @Composable
 fun CartScreen(
     onNavigateBack: () -> Unit,
-    onContinueShopping: () -> Unit
+    onContinueShopping: () -> Unit,
+    isDarkTheme: Boolean
 ) {
     // Mock data
     var cartItems by remember {
@@ -70,13 +71,13 @@ fun CartScreen(
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
-                                .background(Color(0xFFE0E7FF), RoundedCornerShape(8.dp)),
+                                .background(if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFE0E7FF), RoundedCornerShape(8.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ShoppingCart,
                                 contentDescription = null,
-                                tint = Color(0xFF2563EB),
+                                tint = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF2563EB),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -101,11 +102,11 @@ fun CartScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = Color(0xFFF8FAFC)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -123,6 +124,7 @@ fun CartScreen(
                     items(cartItems) { item ->
                         CartItemCard(
                             item = item,
+                            isDarkTheme = isDarkTheme,
                             onRemove = { cartItems = cartItems.filter { it.id != item.id } }
                         )
                     }
@@ -135,6 +137,7 @@ fun CartScreen(
                     subtotal = subtotal,
                     shipping = shipping,
                     total = total,
+                    isDarkTheme = isDarkTheme,
                     onCheckout = { /* TODO */ },
                     onContinueShopping = onContinueShopping
                 )
@@ -168,12 +171,13 @@ fun EmptyCartView(onContinueShopping: () -> Unit) {
 }
 
 @Composable
-fun CartItemCard(item: CartItem, onRemove: () -> Unit) {
+fun CartItemCard(item: CartItem, isDarkTheme: Boolean, onRemove: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)) else null
     ) {
         Row(
             modifier = Modifier
@@ -186,7 +190,7 @@ fun CartItemCard(item: CartItem, onRemove: () -> Unit) {
                 modifier = Modifier
                     .size(100.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF1F5F9)),
+                    .background(if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9)),
                 contentAlignment = Alignment.Center
             ) {
                 Text("Libro", color = Color.Gray, fontSize = 12.sp)
@@ -222,7 +226,7 @@ fun CartItemCard(item: CartItem, onRemove: () -> Unit) {
                     text = "€${item.price.toInt()}",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF2563EB)
+                    color = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF2563EB)
                 )
             }
         }
@@ -235,32 +239,35 @@ fun OrderSummaryCard(
     subtotal: Double,
     shipping: Double,
     total: Double,
+    isDarkTheme: Boolean,
     onCheckout: () -> Unit,
     onContinueShopping: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)) else null
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
             Text(
                 text = "Riepilogo ordine",
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(24.dp))
 
-            SummaryRow(label = "Subtotale ($itemCount articolo${if (itemCount != 1) "li" else ""})", value = "€${"%.2f".format(subtotal)}")
+            SummaryRow(label = "Subtotale ($itemCount articolo${if (itemCount != 1) "li" else ""})", value = "€${"%.2f".format(subtotal)}", isDarkTheme = isDarkTheme)
             Spacer(modifier = Modifier.height(12.dp))
-            SummaryRow(label = "Spedizione", value = if (shipping == 0.0) "Gratuita" else "€${"%.2f".format(shipping)}", valueColor = Color(0xFF10B981))
+            SummaryRow(label = "Spedizione", value = if (shipping == 0.0) "Gratuita" else "€${"%.2f".format(shipping)}", valueColor = Color(0xFF10B981), isDarkTheme = isDarkTheme)
             
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = Color(0xFFF1F5F9))
+            HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFF1F5F9))
             Spacer(modifier = Modifier.height(16.dp))
 
-            SummaryRow(label = "Totale", value = "€${"%.2f".format(total)}", isTotal = true)
+            SummaryRow(label = "Totale", value = "€${"%.2f".format(total)}", isTotal = true, isDarkTheme = isDarkTheme)
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -270,7 +277,10 @@ fun OrderSummaryCard(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isDarkTheme) Color.White else Color(0xFF0F172A),
+                    contentColor = if (isDarkTheme) Color.Black else Color.White
+                )
             ) {
                 Text("Procedi al pagamento", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
@@ -283,16 +293,16 @@ fun OrderSummaryCard(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+                border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
             ) {
-                Text("Continua lo shopping", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF0F172A))
+                Text("Continua lo shopping", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }
 }
 
 @Composable
-fun SummaryRow(label: String, value: String, valueColor: Color = Color.Unspecified, isTotal: Boolean = false) {
+fun SummaryRow(label: String, value: String, valueColor: Color = Color.Unspecified, isTotal: Boolean = false, isDarkTheme: Boolean) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -301,13 +311,13 @@ fun SummaryRow(label: String, value: String, valueColor: Color = Color.Unspecifi
             text = label,
             fontSize = if (isTotal) 18.sp else 16.sp,
             fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal,
-            color = if (isTotal) Color.Black else Color.Gray
+            color = if (isTotal) MaterialTheme.colorScheme.onSurface else Color.Gray
         )
         Text(
             text = value,
             fontSize = if (isTotal) 18.sp else 16.sp,
             fontWeight = if (isTotal) FontWeight.Bold else FontWeight.SemiBold,
-            color = valueColor
+            color = if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else valueColor
         )
     }
 }

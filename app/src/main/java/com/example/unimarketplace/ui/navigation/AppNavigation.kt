@@ -95,7 +95,8 @@ fun AppNavigation(
         composable(Screen.Cart.route) {
             CartScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onContinueShopping = { navController.popBackStack(Screen.Marketplace.route, false) }
+                onContinueShopping = { navController.popBackStack(Screen.Marketplace.route, false) },
+                isDarkTheme = isDarkTheme
             )
         }
 
