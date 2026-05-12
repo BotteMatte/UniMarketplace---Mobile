@@ -1,6 +1,5 @@
 package com.example.unimarketplace.ui.auth
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,19 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
 import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun AuthScreen(
@@ -43,39 +36,11 @@ fun AuthScreen(
     var isLoginMode by remember { mutableStateOf(isLoginModeInitial) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val credentialManager = CredentialManager.create(context)
 
     // Stati per i campi
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
-    // Funzione per il login con Google
-    val onGoogleSignIn = {
-        scope.launch {
-            try {
-                val googleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId("793873937487-hha0o5q4u9tah93f3sjcc05152fsq672.apps.googleusercontent.com") // Placeholder
-                    .setAutoSelectEnabled(true)
-                    .build()
-
-                val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
-                    .build()
-
-                val result = credentialManager.getCredential(context, request)
-                val credential = result.credential
-
-                if (credential is GoogleIdTokenCredential) {
-                    viewModel.signInWithGoogle(credential.id, credential.displayName ?: "")
-                }
-            } catch (e: Exception) {
-                snackbarHostState.showSnackbar("Errore Google: ${e.message}")
-            }
-        }
-    }
 
     // Osserva i risultati dell'autenticazione
     LaunchedEffect(viewModel.authResult) {
@@ -148,7 +113,6 @@ fun AuthScreen(
                     onEmailChange = { email = it },
                     onPasswordChange = { password = it },
                     onSwitchMode = { isLoginMode = !isLoginMode },
-                    onGoogleSignIn = { onGoogleSignIn() },
                     onAction = {
                         if (isLoginMode) {
                             viewModel.login(email, password)
@@ -172,7 +136,6 @@ fun AuthCard(
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSwitchMode: () -> Unit,
-    onGoogleSignIn: () -> Unit,
     onAction: () -> Unit
 ) {
     Card(
@@ -263,35 +226,7 @@ fun AuthCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Pulsante Google
-            OutlinedButton(
-                onClick = onGoogleSignIn,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "G", // Placeholder per logo Google
-                        fontWeight = FontWeight.Black,
-                        fontSize = 20.sp,
-                        color = Color(0xFF4285F4)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = if (isLoginMode) "Accedi con Google" else "Registrati con Google",
-                        color = Color(0xFF0F172A),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             Row(
                 modifier = Modifier.clickable { onSwitchMode() },

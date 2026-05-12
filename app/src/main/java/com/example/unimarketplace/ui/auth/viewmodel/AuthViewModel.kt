@@ -48,14 +48,6 @@ class AuthViewModel(private val repository: UserRepository) : ViewModel() {
         _currentUser.value = null
     }
 
-    fun signInWithGoogle(email: String, fullName: String) {
-        viewModelScope.launch {
-            val user = repository.loginWithGoogle(email, fullName)
-            _currentUser.value = user.fullName
-            _authResult.emit(AuthResult.Success("Benvenuto, ${user.fullName}!"))
-        }
-    }
-
     sealed class AuthResult {
         data class Success(val message: String) : AuthResult()
         data class Error(val message: String) : AuthResult()
