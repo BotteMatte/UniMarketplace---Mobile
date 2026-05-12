@@ -43,6 +43,7 @@ fun MarketplaceScreenPreview() {
             onNavigateToLogin = {},
             onNavigateToRegister = {},
             onNavigateToProfile = {},
+            onNavigateToCart = {}
         )
     }
 }
@@ -57,7 +58,8 @@ fun MarketplaceScreen(
     onLogout: () -> Unit = {},
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToCart: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -100,7 +102,8 @@ fun MarketplaceScreen(
                             onLogout = onLogout,
                             onNavigateToLogin = onNavigateToLogin,
                             onNavigateToRegister = onNavigateToRegister,
-                            onNavigateToProfile = onNavigateToProfile
+                            onNavigateToProfile = onNavigateToProfile,
+                            onNavigateToCart = onNavigateToCart
                         )
                     }
                 }
@@ -403,7 +406,8 @@ fun DrawerContent(
     onLogout: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToCart: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -558,7 +562,14 @@ fun DrawerContent(
 
             // Menu Items
             DrawerMenuItem(icon = Icons.Outlined.FavoriteBorder, label = "Preferiti")
-            DrawerMenuItem(icon = Icons.Outlined.ShoppingCart, label = "Carrello")
+            DrawerMenuItem(
+                icon = Icons.Outlined.ShoppingCart,
+                label = "Carrello",
+                onClick = {
+                    onNavigateToCart()
+                    onClose()
+                }
+            )
             
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0), thickness = 1.dp)
@@ -607,12 +618,12 @@ fun DrawerContent(
 }
 
 @Composable
-fun DrawerMenuItem(icon: ImageVector, label: String) {
+fun DrawerMenuItem(icon: ImageVector, label: String, onClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .clickable { /* TODO */ }
+            .clickable { onClick() }
             .padding(vertical = 16.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

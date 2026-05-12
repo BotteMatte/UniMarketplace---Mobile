@@ -22,6 +22,7 @@ import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
 import com.example.unimarketplace.ui.marketplace.AnnuncioDetailScreen
 import com.example.unimarketplace.ui.marketplace.MarketplaceScreen
 import com.example.unimarketplace.ui.profile.ProfileScreen
+import com.example.unimarketplace.ui.cart.CartScreen
 
 /**
  * Screen: Definizione delle rotte dell'applicazione.
@@ -31,6 +32,7 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Profile : Screen("profile")
+    object Cart : Screen("cart")
     object AnnuncioDetail : Screen("annuncio/{annuncioId}") {
         fun createRoute(annuncioId: Long) = "annuncio/$annuncioId"
     }
@@ -76,7 +78,8 @@ fun AppNavigation(
                 onLogout = { authViewModel.logout() },
                 onNavigateToLogin = { navController.navigate(Screen.Login.route) },
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
-                onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                onNavigateToCart = { navController.navigate(Screen.Cart.route) }
             )
         }
 
@@ -85,6 +88,14 @@ fun AppNavigation(
             ProfileScreen(
                 onBack = { navController.popBackStack() },
                 userName = currentUser ?: ""
+            )
+        }
+
+        // Schermata Carrello
+        composable(Screen.Cart.route) {
+            CartScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onContinueShopping = { navController.popBackStack(Screen.Marketplace.route, false) }
             )
         }
 
