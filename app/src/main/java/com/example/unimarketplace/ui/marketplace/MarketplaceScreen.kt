@@ -29,25 +29,11 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
-import androidx.compose.ui.tooling.preview.Preview
-
-@Preview(showBackground = true)
-@Composable
-fun MarketplaceScreenPreview() {
-    MaterialTheme {
-        MarketplaceScreen(
-            isDarkTheme = false,
-            onThemeToggle = {},
-            userName = "Mario Rossi",
-            onLogout = {},
-            onNavigateToLogin = {},
-            onNavigateToRegister = {},
-            onNavigateToProfile = {},
-            onNavigateToCart = {},
-            onNavigateToCreateAnnuncio = {}
-        )
-    }
-}
+import com.example.unimarketplace.domain.model.Annuncio
+import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModel
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+// Rimosso il Preview perché richiederebbe un ViewModel fittizio
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +41,7 @@ fun MarketplaceScreen(
     modifier: Modifier = Modifier,
     isDarkTheme: Boolean,
     onThemeToggle: () -> Unit,
+    marketplaceViewModel: MarketplaceViewModel,   // <-- NUOVO PARAMETRO
     userName: String? = null,
     onLogout: () -> Unit = {},
     onNavigateToLogin: () -> Unit,
@@ -66,10 +53,13 @@ fun MarketplaceScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Stati per i filtri selezionabili
+    // Stati per i filtri (ancora mock, poi li collegherai al ViewModel)
     var selectedFacolta by remember { mutableStateOf("Tutte") }
     var selectedCondizione by remember { mutableStateOf("Tutte") }
     var maxPrice by remember { mutableFloatStateOf(100f) }
+
+    // Otteniamo la lista reale degli annunci dal ViewModel
+    val annunci by marketplaceViewModel.annunci.collectAsState()
 
     // Per far apparire il drawer a destra, forziamo RTL
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -82,7 +72,6 @@ fun MarketplaceScreen(
                         .width(320.dp)
                         .then(
                             if (isDarkTheme) Modifier.drawBehind {
-                                // Disegna solo la linea sul lato sinistro del drawer (che è a destra nello schermo)
                                 drawLine(
                                     color = Color(0xFF334155),
                                     start = Offset(0f, 0f),
@@ -94,7 +83,6 @@ fun MarketplaceScreen(
                     drawerShape = RoundedCornerShape(0.dp),
                     drawerContainerColor = MaterialTheme.colorScheme.surface
                 ) {
-                    // All'interno del drawer torniamo a LTR per il contenuto
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                         DrawerContent(
                             onClose = { scope.launch { drawerState.close() } },
@@ -200,7 +188,7 @@ fun MarketplaceScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Filters Card
+                        // Filters Card (per ora lasciamo mock, poi potrai collegare filtri reali)
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
@@ -217,7 +205,6 @@ fun MarketplaceScreen(
                                 )
                                 Spacer(modifier = Modifier.height(24.dp))
 
-                                // Facoltà Dropdown (Interattivo)
                                 var expandedFacolta by remember { mutableStateOf(false) }
                                 Box {
                                     FilterDropdown(
@@ -244,7 +231,6 @@ fun MarketplaceScreen(
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                // Condizione Dropdown (Interattivo)
                                 var expandedCondizione by remember { mutableStateOf(false) }
                                 Box {
                                     FilterDropdown(
@@ -293,8 +279,9 @@ fun MarketplaceScreen(
 
                         Spacer(modifier = Modifier.height(32.dp))
 
+                        // Mostriamo il numero reale di annunci
                         Text(
-                            text = "5 annunci trovati",
+                            text = "${annunci.size} annunci trovati",
                             fontWeight = FontWeight.Medium,
                             fontSize = 16.sp,
                             color = Color.Gray
@@ -302,13 +289,16 @@ fun MarketplaceScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Item List (Mock)
+                        // Lista annunci reali
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(16.dp),
                             contentPadding = PaddingValues(bottom = 24.dp)
                         ) {
-                            items(5) {
-                                MarketplaceItemCard(isDarkTheme)
+                            items(annunci.size) { index ->
+                                MarketplaceItemCard(
+                                    isDarkTheme = isDarkTheme,
+                                    annuncio = annunci[index]
+                                )
                             }
                         }
                     }
@@ -352,7 +342,7 @@ fun FilterDropdown(label: String, value: String, isDarkTheme: Boolean, onClick: 
 }
 
 @Composable
-fun MarketplaceItemCard(isDarkTheme: Boolean) {
+fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -360,14 +350,31 @@ fun MarketplaceItemCard(isDarkTheme: Boolean) {
         border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
     ) {
         Column {
-            // Placeholder for Image
+            // Immagine di copertina (prima immagine o placeholder)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
-                    .background(if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFE2E8F0))
+                    .background(if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFE2E8F0)),
+                contentAlignment = Alignment.Center
             ) {
-                Text("Immagine Libro", modifier = Modifier.align(Alignment.Center), color = Color.Gray)
+                if (annuncio.immagini.isNotEmpty()) {
+                    // Carica la prima immagine dalla lista
+                    AsyncImage(
+                        model = annuncio.immagini.first(),
+                        contentDescription = "Immagine annuncio",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    // Placeholder se non ci sono immagini
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = "Nessuna immagine",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
             }
 
             Column(modifier = Modifier.padding(16.dp)) {
@@ -377,13 +384,13 @@ fun MarketplaceItemCard(isDarkTheme: Boolean) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Analisi Matematica 1",
+                        text = annuncio.titolo,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "€25.00",
+                        text = "€${String.format("%.2f", annuncio.prezzo)}",
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 18.sp,
                         color = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF2563EB)
@@ -391,20 +398,20 @@ fun MarketplaceItemCard(isDarkTheme: Boolean) {
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "G. Bramanti, C. Pagani, S. Salsa",
+                    text = annuncio.descrizione,
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    maxLines = 2
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 SuggestionChip(
                     onClick = { },
-                    label = { Text("Ottime condizioni") }
+                    label = { Text(annuncio.condizioni.name) }
                 )
             }
         }
     }
 }
-
 @Composable
 fun DrawerContent(
     onClose: () -> Unit,
@@ -456,7 +463,7 @@ fun DrawerContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable { 
+                        .clickable {
                             onNavigateToProfile()
                             onClose()
                         }
@@ -578,12 +585,11 @@ fun DrawerContent(
                     onClose()
                 }
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0), thickness = 1.dp)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Rimosso Pannello Admin come richiesto
             DrawerMenuItem(icon = Icons.AutoMirrored.Outlined.HelpOutline, label = "Aiuto e Supporto")
 
             Spacer(modifier = Modifier.weight(1f))

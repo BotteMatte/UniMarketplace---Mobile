@@ -82,6 +82,7 @@ fun AppNavigation(
         modifier = modifier
     ) {
         // Schermata Home (Marketplace)
+        // Schermata Home (Marketplace)
         composable(Screen.Marketplace.route) {
             val marketplaceViewModel: MarketplaceViewModel = viewModel(
                 factory = MarketplaceViewModelFactory(annuncioRepository)
@@ -89,14 +90,14 @@ fun AppNavigation(
             MarketplaceScreen(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
+                marketplaceViewModel = marketplaceViewModel,
                 userName = currentUser,
                 onLogout = { authViewModel.logout() },
                 onNavigateToLogin = { navController.navigate(Screen.Login.route) },
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                 onNavigateToCart = { navController.navigate(Screen.Cart.route) },
-                onNavigateToCreateAnnuncio = { navController.navigate(Screen.CreateAnnuncio.route) },
-
+                onNavigateToCreateAnnuncio = { navController.navigate(Screen.CreateAnnuncio.route) }
             )
         }
 
