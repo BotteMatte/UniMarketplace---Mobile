@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -42,7 +41,8 @@ fun MarketplaceScreenPreview() {
             userName = "Mario Rossi",
             onLogout = {},
             onNavigateToLogin = {},
-            onNavigateToRegister = {}
+            onNavigateToRegister = {},
+            onNavigateToProfile = {},
         )
     }
 }
@@ -56,7 +56,8 @@ fun MarketplaceScreen(
     userName: String? = null,
     onLogout: () -> Unit = {},
     onNavigateToLogin: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateToProfile: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -98,7 +99,8 @@ fun MarketplaceScreen(
                             userName = userName,
                             onLogout = onLogout,
                             onNavigateToLogin = onNavigateToLogin,
-                            onNavigateToRegister = onNavigateToRegister
+                            onNavigateToRegister = onNavigateToRegister,
+                            onNavigateToProfile = onNavigateToProfile
                         )
                     }
                 }
@@ -158,8 +160,7 @@ fun MarketplaceScreen(
                             },
                             colors = TopAppBarDefaults.topAppBarColors(
                                 containerColor = MaterialTheme.colorScheme.surface
-                            ),
-                            windowInsets = WindowInsets(0.dp) // Rimuove lo spazio bianco in alto
+                            )
                         )
                     }
                 ) { padding ->
@@ -209,8 +210,8 @@ fun MarketplaceScreen(
                                 var expandedFacolta by remember { mutableStateOf(false) }
                                 Box {
                                     FilterDropdown(
-                                        label = "Facoltà", 
-                                        value = selectedFacolta, 
+                                        label = "Facoltà",
+                                        value = selectedFacolta,
                                         isDarkTheme = isDarkTheme,
                                         onClick = { expandedFacolta = true }
                                     )
@@ -236,8 +237,8 @@ fun MarketplaceScreen(
                                 var expandedCondizione by remember { mutableStateOf(false) }
                                 Box {
                                     FilterDropdown(
-                                        label = "Condizione", 
-                                        value = selectedCondizione, 
+                                        label = "Condizione",
+                                        value = selectedCondizione,
                                         isDarkTheme = isDarkTheme,
                                         onClick = { expandedCondizione = true }
                                     )
@@ -401,7 +402,8 @@ fun DrawerContent(
     userName: String?,
     onLogout: () -> Unit,
     onNavigateToLogin: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateToProfile: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -412,7 +414,8 @@ fun DrawerContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .padding(horizontal = 24.dp)
+                .padding(top = 0.dp, bottom = 0.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -433,14 +436,19 @@ fun DrawerContent(
 
         HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0), thickness = 1.dp)
 
-        Column(modifier = Modifier.padding(24.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 24.dp).padding(top = 16.dp)) {
             if (userName != null) {
                 // User info and Logout
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 24.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { 
+                            onNavigateToProfile()
+                            onClose()
+                        }
+                        .padding(bottom = 8.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -544,9 +552,9 @@ fun DrawerContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0), thickness = 1.dp)
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Menu Items
             DrawerMenuItem(icon = Icons.Outlined.FavoriteBorder, label = "Preferiti")

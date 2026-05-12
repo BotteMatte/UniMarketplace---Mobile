@@ -20,6 +20,7 @@ import com.example.unimarketplace.ui.auth.AuthScreen
 import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
 import com.example.unimarketplace.ui.marketplace.AnnuncioDetailScreen
 import com.example.unimarketplace.ui.marketplace.MarketplaceScreen
+import com.example.unimarketplace.ui.profile.ProfileScreen
 
 /**
  * Screen: Definizione delle rotte dell'applicazione.
@@ -28,6 +29,7 @@ sealed class Screen(val route: String) {
     object Marketplace : Screen("marketplace")
     object Login : Screen("login")
     object Register : Screen("register")
+    object Profile : Screen("profile")
     object AnnuncioDetail : Screen("annuncio/{annuncioId}") {
         fun createRoute(annuncioId: Long) = "annuncio/$annuncioId"
     }
@@ -38,7 +40,7 @@ fun AppNavigation(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit
+    onThemeToggle: () -> Unit,
 ) {
     val context = LocalContext.current
     val database = AppDatabase.getDatabase(context)
@@ -71,7 +73,16 @@ fun AppNavigation(
                 userName = currentUser,
                 onLogout = { authViewModel.logout() },
                 onNavigateToLogin = { navController.navigate(Screen.Login.route) },
-                onNavigateToRegister = { navController.navigate(Screen.Register.route) }
+                onNavigateToRegister = { navController.navigate(Screen.Register.route) },
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+            )
+        }
+
+        // Schermata Profilo
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                onBack = { navController.popBackStack() },
+                userName = currentUser ?: ""
             )
         }
 
