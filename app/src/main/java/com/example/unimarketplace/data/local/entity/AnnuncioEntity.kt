@@ -17,7 +17,7 @@ data class AnnuncioEntity(
     val prezzo: Double,
     val categoria: String,
     val condizioni: String,
-    @ColumnInfo(name = "immagine_url") val immagineUrl: String?,
+    val immagini: List<String> = emptyList(),
     @ColumnInfo(name = "data_pubblicazione") val dataPubblicazione: Long,
     @ColumnInfo(name = "venditore_id") val venditoreId: Long,
     @ColumnInfo(name = "venditore_nome") val venditoreNome: String,

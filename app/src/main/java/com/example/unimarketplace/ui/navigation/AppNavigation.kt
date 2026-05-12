@@ -16,11 +16,16 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.unimarketplace.data.local.AppDatabase
 import com.example.unimarketplace.data.local.SessionManager
+import com.example.unimarketplace.data.local.UniMarketDatabase
+import com.example.unimarketplace.data.repository.AnnuncioRepositoryImpl
 import com.example.unimarketplace.data.repository.UserRepositoryImpl
 import com.example.unimarketplace.ui.auth.AuthScreen
 import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
 import com.example.unimarketplace.ui.marketplace.AnnuncioDetailScreen
+import com.example.unimarketplace.ui.marketplace.CreateAnnuncioScreen
 import com.example.unimarketplace.ui.marketplace.MarketplaceScreen
+import com.example.unimarketplace.ui.marketplace.viewmodel.CreateAnnuncioViewModel
+import com.example.unimarketplace.ui.marketplace.viewmodel.CreateAnnuncioViewModelFactory
 import com.example.unimarketplace.ui.profile.ProfileScreen
 import com.example.unimarketplace.ui.cart.CartScreen
 
@@ -33,6 +38,7 @@ sealed class Screen(val route: String) {
     object Register : Screen("register")
     object Profile : Screen("profile")
     object Cart : Screen("cart")
+    object CreateAnnuncio : Screen("create_annuncio")
     object AnnuncioDetail : Screen("annuncio/{annuncioId}") {
         fun createRoute(annuncioId: Long) = "annuncio/$annuncioId"
     }
@@ -49,6 +55,8 @@ fun AppNavigation(
     val database = AppDatabase.getDatabase(context)
     val userRepository = UserRepositoryImpl(database.userDao())
     val sessionManager = SessionManager(context)
+    val uniDatabase = UniMarketDatabase.getInstance(context)
+    val annuncioRepository = AnnuncioRepositoryImpl(uniDatabase.annuncioDao())
 
     val authViewModel: AuthViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
@@ -79,7 +87,8 @@ fun AppNavigation(
                 onNavigateToLogin = { navController.navigate(Screen.Login.route) },
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
-                onNavigateToCart = { navController.navigate(Screen.Cart.route) }
+                onNavigateToCart = { navController.navigate(Screen.Cart.route) },
+                onNavigateToCreateAnnuncio = { navController.navigate(Screen.CreateAnnuncio.route) }
             )
         }
 
@@ -130,6 +139,18 @@ fun AppNavigation(
             AnnuncioDetailScreen(
                 annuncioId = annuncioId,
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // Schermata Crea Annuncio
+        composable(Screen.CreateAnnuncio.route) {
+            val createAnnuncioViewModel: CreateAnnuncioViewModel = viewModel(
+                factory = CreateAnnuncioViewModelFactory(annuncioRepository, sessionManager)
+            )
+            CreateAnnuncioScreen(
+                viewModel = createAnnuncioViewModel,
+                onBack = { navController.popBackStack() },
+                onSuccess = { navController.popBackStack() }
             )
         }
     }

@@ -8,13 +8,20 @@ class SessionManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
 
     companion object {
+        private const val KEY_USER_ID = "user_id"
         private const val KEY_USER_NAME = "user_name"
     }
 
-    fun saveUserName(name: String?) {
+    fun saveUser(id: Long, name: String) {
         prefs.edit {
+            putLong(KEY_USER_ID, id)
             putString(KEY_USER_NAME, name)
         }
+    }
+
+    fun getUserId(): Long? {
+        val id = prefs.getLong(KEY_USER_ID, -1)
+        return if (id == -1L) null else id
     }
 
     fun getUserName(): String? {
@@ -23,6 +30,7 @@ class SessionManager(context: Context) {
 
     fun clearSession() {
         prefs.edit {
+            remove(KEY_USER_ID)
             remove(KEY_USER_NAME)
         }
     }

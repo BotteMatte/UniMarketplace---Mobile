@@ -7,7 +7,7 @@ data class Annuncio(
     val prezzo: Double,
     val categoria: Categoria,
     val condizioni: Condizioni,
-    val immagineUrl: String?,
+    val immagini: List<String> = emptyList(),
     val dataPubblicazione: Long,
     val venditoreId: Long,
     val venditoreNome: String,

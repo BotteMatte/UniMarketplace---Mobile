@@ -26,7 +26,7 @@ class AuthViewModel(
             val user = repository.login(email, password)
             if (user != null) {
                 _currentUser.value = user.fullName
-                sessionManager.saveUserName(user.fullName)
+                sessionManager.saveUser(user.id.toLong(), user.fullName)
                 _authResult.emit(AuthResult.Success("Benvenuto, ${user.fullName}!"))
             } else {
                 _authResult.emit(AuthResult.Error("Credenziali errate."))

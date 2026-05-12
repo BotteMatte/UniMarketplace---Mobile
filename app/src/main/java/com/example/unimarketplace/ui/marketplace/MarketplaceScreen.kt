@@ -43,7 +43,8 @@ fun MarketplaceScreenPreview() {
             onNavigateToLogin = {},
             onNavigateToRegister = {},
             onNavigateToProfile = {},
-            onNavigateToCart = {}
+            onNavigateToCart = {},
+            onNavigateToCreateAnnuncio = {}
         )
     }
 }
@@ -59,7 +60,8 @@ fun MarketplaceScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToCart: () -> Unit
+    onNavigateToCart: () -> Unit,
+    onNavigateToCreateAnnuncio: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -141,7 +143,13 @@ fun MarketplaceScreen(
                             },
                             actions = {
                                 IconButton(
-                                    onClick = { /* TODO */ },
+                                    onClick = {
+                                        if (userName != null) {
+                                            onNavigateToCreateAnnuncio()
+                                        } else {
+                                            onNavigateToLogin()
+                                        }
+                                    },
                                     modifier = Modifier
                                         .size(40.dp)
                                         .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
