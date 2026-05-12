@@ -64,7 +64,8 @@ class CreateAnnuncioViewModel(
                 repository.insertAnnuncio(annuncio)
                 _createResult.emit(CreateResult.Success("Annuncio creato con successo!"))
             } catch (e: Exception) {
-                _createResult.emit(CreateResult.Error("Errore nella creazione dell'annuncio."))
+                e.printStackTrace()
+                _createResult.emit(CreateResult.Error("Errore: ${e.message}"))
             }
         }
     }

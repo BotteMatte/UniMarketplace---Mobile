@@ -26,6 +26,8 @@ import com.example.unimarketplace.ui.marketplace.CreateAnnuncioScreen
 import com.example.unimarketplace.ui.marketplace.MarketplaceScreen
 import com.example.unimarketplace.ui.marketplace.viewmodel.CreateAnnuncioViewModel
 import com.example.unimarketplace.ui.marketplace.viewmodel.CreateAnnuncioViewModelFactory
+import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModel
+import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModelFactory
 import com.example.unimarketplace.ui.profile.ProfileScreen
 import com.example.unimarketplace.ui.cart.CartScreen
 
@@ -53,7 +55,6 @@ fun AppNavigation(
 ) {
     val context = LocalContext.current
     val database = AppDatabase.getDatabase(context)
-    val userRepository = UserRepositoryImpl(database.userDao())
     val sessionManager = SessionManager(context)
     val uniDatabase = UniMarketDatabase.getInstance(context)
     val annuncioRepository = AnnuncioRepositoryImpl(uniDatabase.annuncioDao())
@@ -63,7 +64,10 @@ fun AppNavigation(
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
                     @Suppress("UNCHECKED_CAST")
-                    return AuthViewModel(userRepository, sessionManager) as T
+                    return AuthViewModel(
+                        UserRepositoryImpl(database.userDao(), uniDatabase.utenteDao()),
+                        sessionManager
+                    ) as T
                 }
                 throw IllegalArgumentException("Unknown ViewModel class")
             }
@@ -79,6 +83,9 @@ fun AppNavigation(
     ) {
         // Schermata Home (Marketplace)
         composable(Screen.Marketplace.route) {
+            val marketplaceViewModel: MarketplaceViewModel = viewModel(
+                factory = MarketplaceViewModelFactory(annuncioRepository)
+            )
             MarketplaceScreen(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
@@ -88,7 +95,8 @@ fun AppNavigation(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                 onNavigateToCart = { navController.navigate(Screen.Cart.route) },
-                onNavigateToCreateAnnuncio = { navController.navigate(Screen.CreateAnnuncio.route) }
+                onNavigateToCreateAnnuncio = { navController.navigate(Screen.CreateAnnuncio.route) },
+
             )
         }
 
