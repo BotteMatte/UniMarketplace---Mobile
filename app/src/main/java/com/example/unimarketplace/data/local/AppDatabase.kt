@@ -1,7 +1,30 @@
 package com.example.unimarketplace.data.local
 
-/**
- * AppDatabase: Questa classe definisce il database locale utilizzando Room.
- * Gestisce la persistenza dei dati offline per gli annunci (Item), i preferiti e i dati utente.
- */
-// abstract class AppDatabase : RoomDatabase() { ... }
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import com.example.unimarketplace.data.local.dao.UserDao
+import com.example.unimarketplace.data.local.entity.UserEntity
+
+@Database(entities = [UserEntity::class], version = 1, exportSchema = false)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun userDao(): UserDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getDatabase(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "unimarketplace_db"
+                ).build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
+}

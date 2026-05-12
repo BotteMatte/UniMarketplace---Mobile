@@ -1,14 +1,23 @@
 package com.example.unimarketplace.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.unimarketplace.data.local.AppDatabase
+import com.example.unimarketplace.data.repository.UserRepositoryImpl
 import com.example.unimarketplace.ui.auth.AuthScreen
+import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
 import com.example.unimarketplace.ui.marketplace.AnnuncioDetailScreen
 import com.example.unimarketplace.ui.marketplace.MarketplaceScreen
 
@@ -31,6 +40,24 @@ fun AppNavigation(
     isDarkTheme: Boolean,
     onThemeToggle: () -> Unit
 ) {
+    val context = LocalContext.current
+    val database = AppDatabase.getDatabase(context)
+    val userRepository = UserRepositoryImpl(database.userDao())
+
+    val authViewModel: AuthViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
+                    @Suppress("UNCHECKED_CAST")
+                    return AuthViewModel(userRepository) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    )
+
+    val currentUser by authViewModel.currentUser.collectAsState()
+
     NavHost(
         navController = navController,
         startDestination = Screen.Marketplace.route,
@@ -41,6 +68,8 @@ fun AppNavigation(
             MarketplaceScreen(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
+                userName = currentUser,
+                onLogout = { authViewModel.logout() },
                 onNavigateToLogin = { navController.navigate(Screen.Login.route) },
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) }
             )
@@ -49,14 +78,19 @@ fun AppNavigation(
         // Schermata Login
         composable(Screen.Login.route) {
             AuthScreen(
+                viewModel = authViewModel,
                 isLoginModeInitial = true,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onSuccess = {
+                    navController.popBackStack(Screen.Marketplace.route, false)
+                }
             )
         }
 
         // Schermata Registrazione
         composable(Screen.Register.route) {
             AuthScreen(
+                viewModel = authViewModel,
                 isLoginModeInitial = false,
                 onBack = { navController.popBackStack() }
             )

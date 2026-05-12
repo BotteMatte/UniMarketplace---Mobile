@@ -6,9 +6,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.*
@@ -37,6 +39,8 @@ fun MarketplaceScreenPreview() {
         MarketplaceScreen(
             isDarkTheme = false,
             onThemeToggle = {},
+            userName = "Mario Rossi",
+            onLogout = {},
             onNavigateToLogin = {},
             onNavigateToRegister = {}
         )
@@ -49,6 +53,8 @@ fun MarketplaceScreen(
     modifier: Modifier = Modifier,
     isDarkTheme: Boolean,
     onThemeToggle: () -> Unit,
+    userName: String? = null,
+    onLogout: () -> Unit = {},
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
@@ -89,6 +95,8 @@ fun MarketplaceScreen(
                             onClose = { scope.launch { drawerState.close() } },
                             isDarkTheme = isDarkTheme,
                             onThemeToggle = onThemeToggle,
+                            userName = userName,
+                            onLogout = onLogout,
                             onNavigateToLogin = onNavigateToLogin,
                             onNavigateToRegister = onNavigateToRegister
                         )
@@ -390,6 +398,8 @@ fun DrawerContent(
     onClose: () -> Unit,
     isDarkTheme: Boolean,
     onThemeToggle: () -> Unit,
+    userName: String?,
+    onLogout: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
@@ -424,55 +434,113 @@ fun DrawerContent(
         HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0), thickness = 1.dp)
 
         Column(modifier = Modifier.padding(24.dp)) {
-            // Auth Buttons
-            // Fix Dark Mode: Pulsante Login bianco con scritta nera in Dark Mode
-            Button(
-                onClick = {
-                    onClose()
-                    onNavigateToLogin()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDarkTheme) Color.White else Color(0xFF020617),
-                    contentColor = if (isDarkTheme) Color.Black else Color.White
-                )
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.Login, contentDescription = null)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Login", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            if (userName != null) {
+                // User info and Logout
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(Color(0xFF2563EB), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = userName.take(1).uppercase(),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = userName,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Studente",
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = {
+                        onLogout()
+                        onClose()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red.copy(alpha = 0.1f),
+                        contentColor = Color.Red
+                    )
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Logout", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+                }
+            } else {
+                // Auth Buttons
+                Button(
+                    onClick = {
+                        onClose()
+                        onNavigateToLogin()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isDarkTheme) Color.White else Color(0xFF020617),
+                        contentColor = if (isDarkTheme) Color.Black else Color.White
+                    )
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.Login, contentDescription = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Login", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+                }
 
-            OutlinedButton(
-                onClick = {
-                    onClose()
-                    onNavigateToRegister()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(8.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.PersonAdd,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        "Registrati",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 16.sp
-                    )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        onClose()
+                        onNavigateToRegister()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            "Registrati",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 16.sp
+                        )
+                    }
                 }
             }
 
