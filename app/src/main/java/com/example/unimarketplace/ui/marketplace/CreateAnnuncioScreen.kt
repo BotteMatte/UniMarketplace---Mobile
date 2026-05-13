@@ -63,6 +63,10 @@ fun CreateAnnuncioScreen(
     var condizioniSelezionate by remember { mutableStateOf(Condizioni.USATO) }
     var immaginiUri by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
+    var errorTitolo by remember { mutableStateOf(false) }
+    var errorDescrizione by remember { mutableStateOf(false) }
+    var errorPrezzo by remember { mutableStateOf(false) }
+
     var expandedCategoria by remember { mutableStateOf(false) }
     var expandedCondizioni by remember { mutableStateOf(false) }
 
@@ -152,30 +156,46 @@ fun CreateAnnuncioScreen(
             // Titolo
             OutlinedTextField(
                 value = titolo,
-                onValueChange = { titolo = it },
-                label = { Text("Titolo") },
+                onValueChange = { 
+                    titolo = it
+                    if (it.isNotBlank()) errorTitolo = false
+                },
+                label = { Text("Titolo *") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                isError = errorTitolo,
+                supportingText = { if (errorTitolo) Text("Il titolo è obbligatorio") }
             )
 
             // Descrizione
             OutlinedTextField(
                 value = descrizione,
-                onValueChange = { descrizione = it },
-                label = { Text("Descrizione") },
+                onValueChange = { 
+                    descrizione = it
+                    if (it.isNotBlank()) errorDescrizione = false
+                },
+                label = { Text("Descrizione *") },
                 modifier = Modifier.fillMaxWidth().height(120.dp),
                 shape = RoundedCornerShape(12.dp),
-                maxLines = 5
+                maxLines = 5,
+                isError = errorDescrizione,
+                supportingText = { if (errorDescrizione) Text("La descrizione è obbligatoria") }
             )
 
             // Prezzo
             OutlinedTextField(
                 value = prezzo,
-                onValueChange = { prezzo = it },
-                label = { Text("Prezzo (€)") },
+                onValueChange = { 
+                    prezzo = it
+                    if (it.toDoubleOrNull() != null && it.toDouble() > 0) errorPrezzo = false
+                },
+                label = { Text("Prezzo (€) *") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                leadingIcon = { Text("€", fontWeight = FontWeight.Bold) }
+                leadingIcon = { Text("€", fontWeight = FontWeight.Bold) },
+                isError = errorPrezzo,
+                supportingText = { if (errorPrezzo) Text("Inserisci un prezzo valido maggiore di 0") },
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal)
             )
 
             // Categoria
@@ -239,7 +259,9 @@ fun CreateAnnuncioScreen(
             }
 
             // Immagini
-            Text("Immagini", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Immagini (facoltativo)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
 
             if (immaginiUri.isNotEmpty()) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -425,15 +447,21 @@ fun CreateAnnuncioScreen(
             // Bottone Crea
             Button(
                 onClick = {
-                    val prezzoDouble = prezzo.toDoubleOrNull() ?: 0.0
-                    viewModel.createAnnuncio(
-                        titolo = titolo,
-                        descrizione = descrizione,
-                        prezzo = prezzoDouble,
-                        categoria = categoriaSelezionata,
-                        condizioni = condizioniSelezionate,
-                        immagini = immaginiUri.map { it.toString() }
-                    )
+                    errorTitolo = titolo.isBlank()
+                    errorDescrizione = descrizione.isBlank()
+                    val prezzoVal = prezzo.toDoubleOrNull()
+                    errorPrezzo = prezzoVal == null || prezzoVal <= 0
+
+                    if (!errorTitolo && !errorDescrizione && !errorPrezzo) {
+                        viewModel.createAnnuncio(
+                            titolo = titolo,
+                            descrizione = descrizione,
+                            prezzo = prezzoVal!!,
+                            categoria = categoriaSelezionata,
+                            condizioni = condizioniSelezionate,
+                            immagini = immaginiUri.map { it.toString() }
+                        )
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(12.dp),
