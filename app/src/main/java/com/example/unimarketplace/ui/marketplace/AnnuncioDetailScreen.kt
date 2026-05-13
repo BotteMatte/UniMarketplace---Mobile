@@ -26,6 +26,11 @@ import com.example.unimarketplace.domain.model.Annuncio
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import androidx.compose.animation.*
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +48,8 @@ fun AnnuncioDetailScreen(
 
     // Indice dell'immagine attualmente visualizzata
     var currentImageIndex by remember { mutableIntStateOf(0) }
+    // Stato per il fullscreen
+    var fullScreenImage by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -75,7 +82,7 @@ fun AnnuncioDetailScreen(
             ) {
                 // CAROSELLO IMMAGINI
                 if (annuncio!!.immagini.isNotEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth().height(350.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth().height(350.dp).clickable { fullScreenImage = true }) {
                         // Immagine principale
                         AsyncImage(
                             model = annuncio!!.immagini[currentImageIndex],
@@ -342,6 +349,101 @@ fun AnnuncioDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text("Annuncio non trovato", color = Color.Gray)
+            }
+        }
+    }
+    // ==================== DIALOG FULLSCREEN IMMAGINE ====================
+    if (fullScreenImage && annuncio != null && annuncio!!.immagini.isNotEmpty()) {
+        val fullPagerState = rememberPagerState(
+            initialPage = currentImageIndex,
+            pageCount = { annuncio!!.immagini.size }
+        )
+
+        Dialog(
+            onDismissRequest = { fullScreenImage = false },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+            ) {
+                // Pager a schermo intero
+                HorizontalPager(
+                    state = fullPagerState,
+                    modifier = Modifier.fillMaxSize()
+                ) { page ->
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AsyncImage(
+                            model = annuncio!!.immagini[page],
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+
+                // Pulsante chiudi (X in alto a destra)
+                IconButton(
+                    onClick = { fullScreenImage = false },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                        .size(44.dp)
+                        .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Chiudi",
+                        tint = Color.White
+                    )
+                }
+
+                // Pallini indicatori in basso
+                if (annuncio!!.immagini.size > 1) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 40.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        repeat(annuncio!!.immagini.size) { index ->
+                            Box(
+                                modifier = Modifier
+                                    .size(if (index == fullPagerState.currentPage) 10.dp else 7.dp)
+                                    .background(
+                                        if (index == fullPagerState.currentPage) Color.White
+                                        else Color.White.copy(alpha = 0.4f),
+                                        CircleShape
+                                    )
+                            )
+                        }
+                    }
+                }
+
+                // Contatore
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.White.copy(alpha = 0.2f)
+                ) {
+                    Text(
+                        text = "${fullPagerState.currentPage + 1} / ${annuncio!!.immagini.size}",
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
