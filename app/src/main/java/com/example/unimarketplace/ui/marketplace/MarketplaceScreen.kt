@@ -273,7 +273,8 @@ fun MarketplaceScreen(
                                                     expanded = expandedFacolta,
                                                     onDismissRequest = { expandedFacolta = false }
                                                 ) {
-                                                    listOf("Tutte", "LIBRI", "APPUNTI", "DISPENSE", "MATERIALE_LABORATORIO", "ALTRO").forEach { option ->
+                                                    val opzioni = listOf("Tutte") + com.example.unimarketplace.domain.model.Categoria.entries.map { it.displayName }
+                                                    opzioni.forEach { option ->
                                                         DropdownMenuItem(
                                                             text = { Text(option, fontSize = 13.sp) },
                                                             onClick = {
@@ -594,7 +595,7 @@ fun MarketplaceItemCard(
                     )
                     SuggestionChip(
                         onClick = { },
-                        label = { Text(annuncio.categoria.name, fontSize = 11.sp) },
+                        label = { Text(annuncio.categoria.displayName, fontSize = 11.sp) },
                         modifier = Modifier.height(24.dp)
                     )
                 }

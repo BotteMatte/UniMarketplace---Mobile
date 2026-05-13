@@ -184,7 +184,7 @@ fun CreateAnnuncioScreen(
                 onExpandedChange = { expandedCategoria = !expandedCategoria }
             ) {
                 OutlinedTextField(
-                    value = categoriaSelezionata.name,
+                    value = categoriaSelezionata.displayName,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Categoria") },
@@ -198,7 +198,7 @@ fun CreateAnnuncioScreen(
                 ) {
                     Categoria.entries.forEach { categoria ->
                         DropdownMenuItem(
-                            text = { Text(categoria.name) },
+                            text = { Text(categoria.displayName) },
                             onClick = {
                                 categoriaSelezionata = categoria
                                 expandedCategoria = false

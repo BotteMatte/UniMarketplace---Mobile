@@ -143,7 +143,7 @@ class MarketplaceViewModel(
 
         val filtrati = tutti.filter { annuncio ->
             val matchCategoria = categoria == "Tutte" ||
-                    annuncio.categoria.name.equals(categoria, ignoreCase = true)
+                    annuncio.categoria.displayName.equals(categoria, ignoreCase = true)
             val matchCondizioni = condizioni == "Tutte" ||
                     annuncio.condizioni.name.equals(condizioni, ignoreCase = true)
             val matchPrezzo = annuncio.prezzo <= prezzoMax

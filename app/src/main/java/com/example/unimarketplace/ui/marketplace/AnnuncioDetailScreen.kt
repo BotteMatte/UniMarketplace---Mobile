@@ -360,7 +360,7 @@ fun AnnuncioDetailScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         AssistChip(
                             onClick = {},
-                            label = { Text(annuncio!!.categoria.name) },
+                            label = { Text(annuncio!!.categoria.displayName) },
                             leadingIcon = {
                                 Icon(Icons.Default.Category, contentDescription = null, modifier = Modifier.size(16.dp))
                             }
