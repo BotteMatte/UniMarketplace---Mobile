@@ -1,8 +1,12 @@
 package com.example.unimarketplace.ui.marketplace
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -19,8 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.unimarketplace.domain.model.Annuncio
-import com.example.unimarketplace.domain.model.Categoria
-import com.example.unimarketplace.domain.model.Condizioni
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -39,8 +41,8 @@ fun AnnuncioDetailScreen(
         viewModel.loadAnnuncio(annuncioId)
     }
 
-    // TODO: Caricare l'annuncio dal database usando l'annuncioId
-    // Per ora mostriamo un esempio
+    // Indice dell'immagine attualmente visualizzata
+    var currentImageIndex by remember { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {
@@ -71,25 +73,137 @@ fun AnnuncioDetailScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Immagine di copertina
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                        .background(Color(0xFFE2E8F0)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (annuncio!!.immagini.isNotEmpty()) {
+                // CAROSELLO IMMAGINI
+                if (annuncio!!.immagini.isNotEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().height(350.dp)) {
+                        // Immagine principale
                         AsyncImage(
-                            model = annuncio!!.immagini.first(),
-                            contentDescription = "Immagine annuncio",
+                            model = annuncio!!.immagini[currentImageIndex],
+                            contentDescription = "Immagine ${currentImageIndex + 1}",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Fit
                         )
-                    } else {
+
+                        // Frecce per scorrere
+                        if (annuncio!!.immagini.size > 1) {
+                            // Freccia sinistra
+                            if (currentImageIndex > 0) {
+                                IconButton(
+                                    onClick = { currentImageIndex-- },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterStart)
+                                        .padding(8.dp)
+                                        .size(40.dp)
+                                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                                ) {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowLeft,
+                                        contentDescription = "Precedente",
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+
+                            // Freccia destra
+                            if (currentImageIndex < annuncio!!.immagini.size - 1) {
+                                IconButton(
+                                    onClick = { currentImageIndex++ },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterEnd)
+                                        .padding(8.dp)
+                                        .size(40.dp)
+                                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                                ) {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowRight,
+                                        contentDescription = "Successiva",
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+                        }
+
+                        // Indicatore pagina (pallini)
+                        if (annuncio!!.immagini.size > 1) {
+                            Row(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                repeat(annuncio!!.immagini.size) { index ->
+                                    Box(
+                                        modifier = Modifier
+                                            .size(if (index == currentImageIndex) 10.dp else 8.dp)
+                                            .background(
+                                                if (index == currentImageIndex) Color.White
+                                                else Color.White.copy(alpha = 0.5f),
+                                                CircleShape
+                                            )
+                                    )
+                                }
+                            }
+                        }
+
+                        // Contatore immagini
+                        if (annuncio!!.immagini.size > 1) {
+                            Text(
+                                text = "${currentImageIndex + 1}/${annuncio!!.immagini.size}",
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(12.dp)
+                                    .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    // Miniature in basso (LazyRow orizzontale)
+                    if (annuncio!!.immagini.size > 1) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            itemsIndexed(annuncio!!.immagini) { index, immagine ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (index == currentImageIndex) Color(0xFF2563EB)
+                                            else Color.Gray.copy(alpha = 0.3f)
+                                        )
+                                        .clickable { currentImageIndex = index }
+                                ) {
+                                    AsyncImage(
+                                        model = immagine,
+                                        contentDescription = "Miniatura ${index + 1}",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(if (index == currentImageIndex) 2.dp else 0.dp),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Nessuna immagine
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp)
+                            .background(Color(0xFFE2E8F0)),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             Icons.Default.Image,
-                            contentDescription = null,
+                            contentDescription = "Nessuna immagine",
                             tint = Color.Gray,
                             modifier = Modifier.size(64.dp)
                         )
@@ -202,7 +316,9 @@ fun AnnuncioDetailScreen(
                         }
 
                         Card(
-                            modifier = Modifier.fillMaxWidth().height(250.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(250.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             GoogleMap(
