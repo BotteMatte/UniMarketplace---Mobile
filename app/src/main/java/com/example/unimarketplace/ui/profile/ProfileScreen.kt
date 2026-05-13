@@ -17,13 +17,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.unimarketplace.ui.profile.viewmodel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    viewModel: ProfileViewModel,
     onBack: () -> Unit,
     userName: String
 ) {
+    val stats by viewModel.stats.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -36,69 +41,78 @@ fun ProfileScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = padding.calculateTopPadding())
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // User Info Section
-            item {
-                UserInfoSection(userName)
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = padding.calculateTopPadding())
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // User Info Section
+                item {
+                    UserInfoSection(userName)
+                }
 
-            // Stats Cards Section
-            item {
-                StatsOverviewSection()
-            }
+                // Stats Cards Section
+                item {
+                    StatsOverviewSection(
+                        totalAds = stats.totalAds,
+                        soldAds = stats.soldAds,
+                        earnings = stats.totalEarnings
+                    )
+                }
 
-            // Pie Chart Section
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Stato Annunci",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        AdsStatusPieChart(
-                            soldCount = 8,
-                            activeCount = 4
-                        )
+                // Pie Chart Section
+                if (stats.totalAds > 0) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Stato Annunci",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                AdsStatusPieChart(
+                                    soldCount = stats.soldAds,
+                                    activeCount = stats.activeAds
+                                )
+                            }
+                        }
                     }
                 }
-            }
 
-            // Bar Chart Section
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Annunci per Categoria",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        CategoryBarChart(
-                            data = mapOf(
-                                "Libri" to 7,
-                                "Appunti" to 5,
-                                "Corsi" to 3,
-                                "Altro" to 2
-                            )
-                        )
+                // Bar Chart Section
+                if (stats.adsByCategory.isNotEmpty()) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Annunci per Categoria",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                CategoryBarChart(
+                                    data = stats.adsByCategory
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -142,14 +156,14 @@ fun UserInfoSection(userName: String) {
 }
 
 @Composable
-fun StatsOverviewSection() {
+fun StatsOverviewSection(totalAds: Int, soldAds: Int, earnings: Double) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        StatCard(modifier = Modifier.weight(1f), label = "Totale Annunci", value = "12", color = Color(0xFF3B82F6))
-        StatCard(modifier = Modifier.weight(1f), label = "Venduti", value = "8", color = Color(0xFF10B981))
-        StatCard(modifier = Modifier.weight(1f), label = "Guadagno", value = "€240", color = Color(0xFFF59E0B))
+        StatCard(modifier = Modifier.weight(1f), label = "Totale Annunci", value = totalAds.toString(), color = Color(0xFF3B82F6))
+        StatCard(modifier = Modifier.weight(1f), label = "Venduti", value = soldAds.toString(), color = Color(0xFF10B981))
+        StatCard(modifier = Modifier.weight(1f), label = "Guadagno", value = "€${earnings.toInt()}", color = Color(0xFFF59E0B))
     }
 }
 

@@ -31,6 +31,8 @@ import com.example.unimarketplace.ui.marketplace.viewmodel.CreateAnnuncioViewMod
 import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModel
 import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModelFactory
 import com.example.unimarketplace.ui.profile.ProfileScreen
+import com.example.unimarketplace.ui.profile.viewmodel.ProfileViewModel
+import com.example.unimarketplace.ui.profile.viewmodel.ProfileViewModelFactory
 import com.example.unimarketplace.ui.cart.CartScreen
 import com.example.unimarketplace.ui.cart.viewmodel.CartViewModel
 import com.example.unimarketplace.ui.cart.viewmodel.CartViewModelFactory
@@ -120,7 +122,11 @@ fun AppNavigation(
 
         // Schermata Profilo
         composable(Screen.Profile.route) {
+            val profileViewModel: ProfileViewModel = viewModel(
+                factory = ProfileViewModelFactory(annuncioRepository, sessionManager)
+            )
             ProfileScreen(
+                viewModel = profileViewModel,
                 onBack = { navController.popBackStack() },
                 userName = currentUser ?: ""
             )

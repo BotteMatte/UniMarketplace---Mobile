@@ -103,44 +103,78 @@ fun AnnuncioDetailScreen(
                     color = MaterialTheme.colorScheme.surface
                 ) {
                     if (isOwnAnnuncio) {
-                        Box(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                            contentAlignment = Alignment.Center
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(
-                                "Questo è un tuo annuncio",
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Gray
-                            )
+                            if (annuncio?.isVenduto == true) {
+                                Text(
+                                    "Questo articolo è stato venduto",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF10B981)
+                                )
+                            } else {
+                                Text(
+                                    "Questo è un tuo annuncio",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Gray
+                                )
+                                Button(
+                                    onClick = { viewModel.segnaComeVenduto() },
+                                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Segna come venduto")
+                                }
+                            }
                         }
                     } else {
-                        Button(
-                            onClick = { 
-                                if (isInCart) viewModel.rimuoviDalCarrello() 
-                                else viewModel.aggiungiAlCarrello() 
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                                .height(56.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isInCart) Color(0xFFEF4444) else (if (isDarkTheme) Color.White else Color(0xFF0F172A)),
-                                contentColor = if (isInCart) Color.White else (if (isDarkTheme) Color.Black else Color.White)
-                            )
-                        ) {
-                            Icon(
-                                imageVector = if (isInCart) Icons.Default.RemoveShoppingCart else Icons.Default.AddShoppingCart, 
-                                contentDescription = null
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (isInCart) "Rimuovi dal carrello" else "Aggiungi al carrello", 
-                                fontWeight = FontWeight.Bold, 
-                                fontSize = 16.sp
-                            )
+                        if (annuncio?.isVenduto == true) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "ARTICOLO VENDUTO",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.Red,
+                                    fontSize = 18.sp
+                                )
+                            }
+                        } else {
+                            Button(
+                                onClick = { 
+                                    if (isInCart) viewModel.rimuoviDalCarrello() 
+                                    else viewModel.aggiungiAlCarrello() 
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isInCart) Color(0xFFEF4444) else (if (isDarkTheme) Color.White else Color(0xFF0F172A)),
+                                    contentColor = if (isInCart) Color.White else (if (isDarkTheme) Color.Black else Color.White)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = if (isInCart) Icons.Default.RemoveShoppingCart else Icons.Default.AddShoppingCart, 
+                                    contentDescription = null
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (isInCart) "Rimuovi dal carrello" else "Aggiungi al carrello", 
+                                    fontWeight = FontWeight.Bold, 
+                                    fontSize = 16.sp
+                                )
+                            }
                         }
                     }
                 }

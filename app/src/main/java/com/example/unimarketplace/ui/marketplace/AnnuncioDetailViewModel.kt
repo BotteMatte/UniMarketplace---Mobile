@@ -113,6 +113,14 @@ class AnnuncioDetailViewModel(
         }
     }
 
+    fun segnaComeVenduto() {
+        val currentAnnuncio = _annuncio.value ?: return
+        viewModelScope.launch {
+            repository.updateAnnuncio(currentAnnuncio.copy(isVenduto = true))
+            _annuncio.value = repository.getAnnuncioById(currentAnnuncio.id)
+        }
+    }
+
     fun clearError() {
         _errorMessage.value = null
     }
