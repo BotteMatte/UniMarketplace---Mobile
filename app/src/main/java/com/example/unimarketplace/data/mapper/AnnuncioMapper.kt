@@ -29,7 +29,13 @@ fun AnnuncioEntity.toDomain(): Annuncio {
         dataPubblicazione = this.dataPubblicazione,
         venditoreId = this.venditoreId,
         venditoreNome = this.venditoreNome,
-        isVenduto = this.isVenduto
+        isVenduto = this.isVenduto,
+        latitudine = this.latitudine,
+        longitudine = this.longitudine,
+        indirizzo = this.indirizzo,
+        citta = this.citta,
+        cap = this.cap,
+        provincia = this.provincia
     )
 }
 
@@ -45,6 +51,12 @@ fun Annuncio.toEntity(): AnnuncioEntity {
         dataPubblicazione = this.dataPubblicazione,
         venditoreId = this.venditoreId,
         venditoreNome = this.venditoreNome,
-        isVenduto = this.isVenduto
+        isVenduto = this.isVenduto,
+        latitudine = this.latitudine,
+        longitudine = this.longitudine,
+        indirizzo = this.indirizzo,
+        citta = this.citta,
+        cap = this.cap,
+        provincia = this.provincia
     )
 }

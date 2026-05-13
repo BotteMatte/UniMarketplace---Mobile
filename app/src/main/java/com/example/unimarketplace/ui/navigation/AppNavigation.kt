@@ -30,6 +30,7 @@ import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModel
 import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModelFactory
 import com.example.unimarketplace.ui.profile.ProfileScreen
 import com.example.unimarketplace.ui.cart.CartScreen
+import android.app.Application
 
 /**
  * Screen: Definizione delle rotte dell'applicazione.
@@ -154,10 +155,13 @@ fun AppNavigation(
         // Schermata Crea Annuncio
         composable(Screen.CreateAnnuncio.route) {
             val createAnnuncioViewModel: CreateAnnuncioViewModel = viewModel(
-                factory = CreateAnnuncioViewModelFactory(annuncioRepository, sessionManager)
+                factory = CreateAnnuncioViewModelFactory(
+                    context.applicationContext as Application,
+                    annuncioRepository,
+                    sessionManager
+                )
             )
 
-            // Ottieni il ViewModel del marketplace per forzare il refresh
             val marketplaceViewModel: MarketplaceViewModel = viewModel(
                 factory = MarketplaceViewModelFactory(annuncioRepository)
             )

@@ -1,7 +1,7 @@
 package com.example.unimarketplace.domain.model
 
 data class Annuncio(
-    val id: Long,
+    val id: Long = 0,
     val titolo: String,
     val descrizione: String,
     val prezzo: Double,
@@ -11,5 +11,12 @@ data class Annuncio(
     val dataPubblicazione: Long,
     val venditoreId: Long,
     val venditoreNome: String,
-    val isVenduto: Boolean
+    val isVenduto: Boolean = false,
+    // Nuovi campi per la geolocalizzazione
+    val latitudine: Double = 0.0,
+    val longitudine: Double = 0.0,
+    val indirizzo: String = "",
+    val citta: String = "",
+    val cap: String = "",
+    val provincia: String = ""
 )

@@ -14,7 +14,7 @@ import com.example.unimarketplace.data.local.entity.UtenteEntity
 
 @Database(
     entities = [UtenteEntity::class, AnnuncioEntity::class, PreferitiEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

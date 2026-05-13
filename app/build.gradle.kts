@@ -57,6 +57,14 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.coil.compose)
     implementation("io.coil-kt:coil-compose:2.6.0")
+    // Google Maps e Location
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+// Geocoding (per reverse geocoding)
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    // Permessi Activity Result
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
