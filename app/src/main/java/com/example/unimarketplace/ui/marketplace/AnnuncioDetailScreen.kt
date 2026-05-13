@@ -44,6 +44,7 @@ fun AnnuncioDetailScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val isAddedToCart by viewModel.isAddedToCart.collectAsState()
     val isInCart by viewModel.isInCart.collectAsState()
+    val isFavorite by viewModel.isFavorite.collectAsState()
     val isOwnAnnuncio by viewModel.isOwnAnnuncio.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -78,6 +79,15 @@ fun AnnuncioDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.toggleFavorite() }) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Preferiti",
+                            tint = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

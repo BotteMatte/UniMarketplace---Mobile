@@ -34,6 +34,9 @@ import com.example.unimarketplace.ui.profile.ProfileScreen
 import com.example.unimarketplace.ui.cart.CartScreen
 import com.example.unimarketplace.ui.cart.viewmodel.CartViewModel
 import com.example.unimarketplace.ui.cart.viewmodel.CartViewModelFactory
+import com.example.unimarketplace.ui.favorites.FavoritesScreen
+import com.example.unimarketplace.ui.favorites.viewmodel.FavoritesViewModel
+import com.example.unimarketplace.ui.favorites.viewmodel.FavoritesViewModelFactory
 import android.app.Application
 import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModel
 import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModelFactory
@@ -47,6 +50,7 @@ sealed class Screen(val route: String) {
     object Register : Screen("register")
     object Profile : Screen("profile")
     object Cart : Screen("cart")
+    object Favorites : Screen("favorites")
     object CreateAnnuncio : Screen("create_annuncio")
     object AnnuncioDetail : Screen("annuncio/{annuncioId}") {
         fun createRoute(annuncioId: Long) = "annuncio/$annuncioId"
@@ -106,6 +110,7 @@ fun AppNavigation(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                 onNavigateToCart = { navController.navigate(Screen.Cart.route) },
+                onNavigateToFavorites = { navController.navigate(Screen.Favorites.route) },
                 onNavigateToCreateAnnuncio = { navController.navigate(Screen.CreateAnnuncio.route) },
                 onNavigateToDetail = { annuncioId ->
                     navController.navigate(Screen.AnnuncioDetail.createRoute(annuncioId))
@@ -130,6 +135,22 @@ fun AppNavigation(
                 viewModel = cartViewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onContinueShopping = { navController.popBackStack(Screen.Marketplace.route, false) },
+                isDarkTheme = isDarkTheme
+            )
+        }
+
+        // Schermata Preferiti
+        composable(Screen.Favorites.route) {
+            val favoritesViewModel: FavoritesViewModel = viewModel(
+                factory = FavoritesViewModelFactory(preferitiRepository, annuncioRepository, sessionManager)
+            )
+            FavoritesScreen(
+                viewModel = favoritesViewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToHome = { navController.popBackStack(Screen.Marketplace.route, false) },
+                onNavigateToDetail = { annuncioId ->
+                    navController.navigate(Screen.AnnuncioDetail.createRoute(annuncioId))
+                },
                 isDarkTheme = isDarkTheme
             )
         }
@@ -163,7 +184,7 @@ fun AppNavigation(
             val annuncioId = backStackEntry.arguments?.getLong("annuncioId") ?: return@composable
 
             val detailViewModel: AnnuncioDetailViewModel = viewModel(
-                factory = AnnuncioDetailViewModelFactory(annuncioRepository, carrelloRepository, sessionManager)
+                factory = AnnuncioDetailViewModelFactory(annuncioRepository, carrelloRepository, preferitiRepository, sessionManager)
             )
 
             AnnuncioDetailScreen(

@@ -43,6 +43,9 @@ class MarketplaceViewModel(
     private val _queryRicerca = MutableStateFlow("")
     val queryRicerca: StateFlow<String> = _queryRicerca.asStateFlow()
 
+    private val _errorEvent = MutableStateFlow<String?>(null)
+    val errorEvent: StateFlow<String?> = _errorEvent.asStateFlow()
+
     init {
         caricaAnnunci()
         osservaPreferiti()
@@ -78,9 +81,20 @@ class MarketplaceViewModel(
 
     fun togglePreferito(annuncioId: Long) {
         val utenteId = sessionManager.getUserId() ?: return
+        val annuncio = _allAnnunci.value.find { it.id == annuncioId }
+        
+        if (annuncio?.venditoreId == utenteId) {
+            _errorEvent.value = "Non puoi aggiungere ai preferiti un tuo articolo"
+            return
+        }
+
         viewModelScope.launch {
             preferitiRepository.togglePreferito(utenteId, annuncioId)
         }
+    }
+
+    fun clearError() {
+        _errorEvent.value = null
     }
 
     // NUOVO: metodo pubblico per ricaricare (chiamato quando si torna alla home)

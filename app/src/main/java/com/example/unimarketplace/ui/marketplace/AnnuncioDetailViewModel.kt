@@ -6,12 +6,14 @@ import com.example.unimarketplace.data.local.SessionManager
 import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
 import com.example.unimarketplace.domain.repository.CarrelloRepository
+import com.example.unimarketplace.domain.repository.PreferitiRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class AnnuncioDetailViewModel(
     private val repository: AnnuncioRepository,
     private val carrelloRepository: CarrelloRepository,
+    private val preferitiRepository: PreferitiRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -28,6 +30,9 @@ class AnnuncioDetailViewModel(
     private val _isInCart = MutableStateFlow(false)
     val isInCart: StateFlow<Boolean> = _isInCart.asStateFlow()
 
+    private val _isFavorite = MutableStateFlow(false)
+    val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
+
     private val _isAddedToCart = MutableStateFlow(false)
     val isAddedToCart: StateFlow<Boolean> = _isAddedToCart.asStateFlow()
 
@@ -41,12 +46,17 @@ class AnnuncioDetailViewModel(
                 val annuncio = repository.getAnnuncioById(id)
                 _annuncio.value = annuncio
                 
-                // Controlla se è nel carrello in una coroutine separata per non bloccare il caricamento
+                // Controlla se è nel carrello e nei preferiti in una coroutine separata
                 val userId = sessionManager.getUserId()
                 if (userId != null && annuncio != null) {
                     launch {
                         carrelloRepository.getCarrelloByUtente(userId).collectLatest { ids ->
                             _isInCart.value = ids.contains(annuncio.id)
+                        }
+                    }
+                    launch {
+                        preferitiRepository.isPreferito(userId, annuncio.id).collectLatest { isFav ->
+                            _isFavorite.value = isFav
                         }
                     }
                 }
@@ -86,6 +96,20 @@ class AnnuncioDetailViewModel(
         viewModelScope.launch {
             carrelloRepository.rimuoviDalCarrello(userId, currentAnnuncio.id)
             _isAddedToCart.value = false // Resetta lo stato di aggiunta
+        }
+    }
+
+    fun toggleFavorite() {
+        val currentAnnuncio = _annuncio.value ?: return
+        val userId = sessionManager.getUserId() ?: return
+
+        if (currentAnnuncio.venditoreId == userId) {
+            _errorMessage.value = "Non puoi aggiungere ai preferiti un tuo articolo"
+            return
+        }
+
+        viewModelScope.launch {
+            preferitiRepository.togglePreferito(userId, currentAnnuncio.id)
         }
     }
 

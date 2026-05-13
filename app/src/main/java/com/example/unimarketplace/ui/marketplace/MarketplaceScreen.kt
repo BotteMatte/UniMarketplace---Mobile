@@ -51,6 +51,7 @@ fun MarketplaceScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToCart: () -> Unit,
+    onNavigateToFavorites: () -> Unit,
     onNavigateToCreateAnnuncio: () -> Unit,
     onNavigateToDetail: (Long) -> Unit = {}
 ) {
@@ -67,6 +68,16 @@ fun MarketplaceScreen(
     val annunci by marketplaceViewModel.annunciFiltrati.collectAsState()
     val preferitiIds by marketplaceViewModel.preferitiIds.collectAsState()
     val carrelloIds by marketplaceViewModel.carrelloIds.collectAsState()
+    val errorEvent by marketplaceViewModel.errorEvent.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(errorEvent) {
+        errorEvent?.let {
+            snackbarHostState.showSnackbar(it)
+            marketplaceViewModel.clearError()
+        }
+    }
 
     // Testo della barra di ricerca
     var testoRicerca by remember { mutableStateOf("") }
@@ -107,7 +118,8 @@ fun MarketplaceScreen(
                             onNavigateToLogin = onNavigateToLogin,
                             onNavigateToRegister = onNavigateToRegister,
                             onNavigateToProfile = onNavigateToProfile,
-                            onNavigateToCart = onNavigateToCart
+                            onNavigateToCart = onNavigateToCart,
+                            onNavigateToFavorites = onNavigateToFavorites
                         )
                     }
                 }
@@ -117,6 +129,7 @@ fun MarketplaceScreen(
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Scaffold(
                     modifier = modifier,
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
                     topBar = {
                         Column {
                             // TopBar fissa
@@ -600,7 +613,8 @@ fun DrawerContent(
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToCart: () -> Unit
+    onNavigateToCart: () -> Unit,
+    onNavigateToFavorites: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -754,7 +768,14 @@ fun DrawerContent(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Menu Items
-            DrawerMenuItem(icon = Icons.Outlined.FavoriteBorder, label = "Preferiti")
+            DrawerMenuItem(
+                icon = Icons.Outlined.FavoriteBorder, 
+                label = "Preferiti",
+                onClick = {
+                    onNavigateToFavorites()
+                    onClose()
+                }
+            )
             DrawerMenuItem(
                 icon = Icons.Outlined.ShoppingCart,
                 label = "Carrello",
