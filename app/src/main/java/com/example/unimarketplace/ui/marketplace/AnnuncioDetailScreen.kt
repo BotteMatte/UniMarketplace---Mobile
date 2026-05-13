@@ -37,13 +37,31 @@ import androidx.compose.foundation.pager.rememberPagerState
 fun AnnuncioDetailScreen(
     annuncioId: Long,
     viewModel: AnnuncioDetailViewModel,
+    isDarkTheme: Boolean,
     onNavigateBack: () -> Unit
 ) {
     val annuncio by viewModel.annuncio.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isAddedToCart by viewModel.isAddedToCart.collectAsState()
+    val isOwnAnnuncio by viewModel.isOwnAnnuncio.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(annuncioId) {
         viewModel.loadAnnuncio(annuncioId)
+    }
+
+    LaunchedEffect(isAddedToCart) {
+        if (isAddedToCart) {
+            snackbarHostState.showSnackbar("Articolo aggiunto al carrello")
+        }
+    }
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
     }
 
     // Indice dell'immagine attualmente visualizzata
@@ -52,6 +70,7 @@ fun AnnuncioDetailScreen(
     var fullScreenImage by remember { mutableStateOf(false) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Dettaglio Annuncio", fontWeight = FontWeight.Bold) },
@@ -64,6 +83,47 @@ fun AnnuncioDetailScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
+        },
+        bottomBar = {
+            if (annuncio != null && !isLoading) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shadowElevation = 8.dp,
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    if (isOwnAnnuncio) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Questo è un tuo annuncio",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = { viewModel.aggiungiAlCarrello() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isDarkTheme) Color.White else Color(0xFF0F172A),
+                                contentColor = if (isDarkTheme) Color.Black else Color.White
+                            )
+                        ) {
+                            Icon(Icons.Default.AddShoppingCart, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Aggiungi al carrello", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
+                    }
+                }
+            }
         }
     ) { padding ->
         if (isLoading) {

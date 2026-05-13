@@ -18,6 +18,7 @@ import com.example.unimarketplace.data.local.AppDatabase
 import com.example.unimarketplace.data.local.SessionManager
 import com.example.unimarketplace.data.local.UniMarketDatabase
 import com.example.unimarketplace.data.repository.AnnuncioRepositoryImpl
+import com.example.unimarketplace.data.repository.CarrelloRepositoryImpl
 import com.example.unimarketplace.data.repository.PreferitiRepositoryImpl
 import com.example.unimarketplace.data.repository.UserRepositoryImpl
 import com.example.unimarketplace.ui.auth.AuthScreen
@@ -31,6 +32,8 @@ import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModel
 import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModelFactory
 import com.example.unimarketplace.ui.profile.ProfileScreen
 import com.example.unimarketplace.ui.cart.CartScreen
+import com.example.unimarketplace.ui.cart.viewmodel.CartViewModel
+import com.example.unimarketplace.ui.cart.viewmodel.CartViewModelFactory
 import android.app.Application
 import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModel
 import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModelFactory
@@ -63,6 +66,7 @@ fun AppNavigation(
     val uniDatabase = UniMarketDatabase.getInstance(context)
     val annuncioRepository = AnnuncioRepositoryImpl(uniDatabase.annuncioDao())
     val preferitiRepository = PreferitiRepositoryImpl(uniDatabase.preferitiDao())
+    val carrelloRepository = CarrelloRepositoryImpl(uniDatabase.carrelloDao())
 
     val authViewModel: AuthViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
@@ -119,7 +123,11 @@ fun AppNavigation(
 
         // Schermata Carrello
         composable(Screen.Cart.route) {
+            val cartViewModel: CartViewModel = viewModel(
+                factory = CartViewModelFactory(carrelloRepository, annuncioRepository, sessionManager)
+            )
             CartScreen(
+                viewModel = cartViewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onContinueShopping = { navController.popBackStack(Screen.Marketplace.route, false) },
                 isDarkTheme = isDarkTheme
@@ -155,12 +163,13 @@ fun AppNavigation(
             val annuncioId = backStackEntry.arguments?.getLong("annuncioId") ?: return@composable
 
             val detailViewModel: AnnuncioDetailViewModel = viewModel(
-                factory = AnnuncioDetailViewModelFactory(annuncioRepository)
+                factory = AnnuncioDetailViewModelFactory(annuncioRepository, carrelloRepository, sessionManager)
             )
 
             AnnuncioDetailScreen(
                 annuncioId = annuncioId,
                 viewModel = detailViewModel,
+                isDarkTheme = isDarkTheme,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

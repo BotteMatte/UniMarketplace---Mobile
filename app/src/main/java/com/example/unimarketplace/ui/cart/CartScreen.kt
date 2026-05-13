@@ -18,48 +18,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
-
-@Preview(showBackground = true)
-@Composable
-fun CartScreenPreview() {
-    MaterialTheme {
-        CartScreen(onNavigateBack = {}, onContinueShopping = {}, isDarkTheme = false)
-    }
-}
-
-data class CartItem(
-    val id: Long,
-    val title: String,
-    val description: String,
-    val university: String,
-    val price: Double,
-    val imageUrl: String? = null
-)
+import coil.compose.AsyncImage
+import com.example.unimarketplace.domain.model.Annuncio
+import com.example.unimarketplace.ui.cart.viewmodel.CartViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
+    viewModel: CartViewModel,
     onNavigateBack: () -> Unit,
     onContinueShopping: () -> Unit,
     isDarkTheme: Boolean
 ) {
-    // Mock data
-    var cartItems by remember {
-        mutableStateOf(
-            listOf(
-                CartItem(
-                    id = 1,
-                    title = "Analisi Matematica 1 - Bramanti",
-                    description = "Analisi Matematica 1",
-                    university = "Politecnico di Milano",
-                    price = 25.0
-                )
-            )
-        )
-    }
+    val cartItems by viewModel.cartItems.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
-    val subtotal = cartItems.sumOf { it.price }
+    val subtotal = cartItems.sumOf { it.prezzo }
     val shipping = 0.0
     val total = subtotal + shipping
 
@@ -108,39 +82,42 @@ fun CartScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-        ) {
-            if (cartItems.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else if (cartItems.isEmpty()) {
                 EmptyCartView(onContinueShopping)
             } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
                 ) {
-                    items(cartItems) { item ->
-                        CartItemCard(
-                            item = item,
-                            isDarkTheme = isDarkTheme,
-                            onRemove = { cartItems = cartItems.filter { it.id != item.id } }
-                        )
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(cartItems) { item ->
+                            CartItemCard(
+                                item = item,
+                                isDarkTheme = isDarkTheme,
+                                onRemove = { viewModel.rimuoviDalCarrello(item.id) }
+                            )
+                        }
                     }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    OrderSummaryCard(
+                        itemCount = cartItems.size,
+                        subtotal = subtotal,
+                        shipping = shipping,
+                        total = total,
+                        isDarkTheme = isDarkTheme,
+                        onCheckout = { /* TODO */ },
+                        onContinueShopping = onContinueShopping
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                OrderSummaryCard(
-                    itemCount = cartItems.size,
-                    subtotal = subtotal,
-                    shipping = shipping,
-                    total = total,
-                    isDarkTheme = isDarkTheme,
-                    onCheckout = { /* TODO */ },
-                    onContinueShopping = onContinueShopping
-                )
             }
         }
     }
@@ -171,7 +148,7 @@ fun EmptyCartView(onContinueShopping: () -> Unit) {
 }
 
 @Composable
-fun CartItemCard(item: CartItem, isDarkTheme: Boolean, onRemove: () -> Unit) {
+fun CartItemCard(item: Annuncio, isDarkTheme: Boolean, onRemove: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -185,7 +162,7 @@ fun CartItemCard(item: CartItem, isDarkTheme: Boolean, onRemove: () -> Unit) {
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Placeholder for Image
+            // Immagine dell'articolo
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -193,7 +170,21 @@ fun CartItemCard(item: CartItem, isDarkTheme: Boolean, onRemove: () -> Unit) {
                     .background(if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Libro", color = Color.Gray, fontSize = 12.sp)
+                if (item.immagini.isNotEmpty()) {
+                    AsyncImage(
+                        model = item.immagini.first(),
+                        contentDescription = item.titolo,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -205,7 +196,7 @@ fun CartItemCard(item: CartItem, isDarkTheme: Boolean, onRemove: () -> Unit) {
                     verticalAlignment = Alignment.Top
                 ) {
                     Text(
-                        text = item.title,
+                        text = item.titolo,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
@@ -219,11 +210,11 @@ fun CartItemCard(item: CartItem, isDarkTheme: Boolean, onRemove: () -> Unit) {
                         )
                     }
                 }
-                Text(text = item.description, fontSize = 14.sp, color = Color.Gray)
-                Text(text = item.university, fontSize = 14.sp, color = Color.Gray)
+                Text(text = item.descrizione, fontSize = 14.sp, color = Color.Gray, maxLines = 1)
+                Text(text = item.venditoreNome, fontSize = 14.sp, color = Color.Gray)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "€${item.price.toInt()}",
+                    text = "€${item.prezzo.toInt()}",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF2563EB)

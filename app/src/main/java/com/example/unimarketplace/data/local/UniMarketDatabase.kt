@@ -6,15 +6,17 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.unimarketplace.data.local.dao.AnnuncioDao
+import com.example.unimarketplace.data.local.dao.CarrelloDao
 import com.example.unimarketplace.data.local.dao.PreferitiDao
 import com.example.unimarketplace.data.local.dao.UtenteDao
 import com.example.unimarketplace.data.local.entity.AnnuncioEntity
+import com.example.unimarketplace.data.local.entity.CarrelloEntity
 import com.example.unimarketplace.data.local.entity.PreferitiEntity
 import com.example.unimarketplace.data.local.entity.UtenteEntity
 
 @Database(
-    entities = [UtenteEntity::class, AnnuncioEntity::class, PreferitiEntity::class],
-    version = 2,
+    entities = [UtenteEntity::class, AnnuncioEntity::class, PreferitiEntity::class, CarrelloEntity::class],
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -23,6 +25,7 @@ abstract class UniMarketDatabase : RoomDatabase() {
     abstract fun utenteDao(): UtenteDao
     abstract fun annuncioDao(): AnnuncioDao
     abstract fun preferitiDao(): PreferitiDao
+    abstract fun carrelloDao(): CarrelloDao
 
     companion object {
         @Volatile
