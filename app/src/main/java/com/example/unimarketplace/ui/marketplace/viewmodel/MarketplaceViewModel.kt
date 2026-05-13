@@ -4,19 +4,27 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
+import com.example.unimarketplace.domain.repository.PreferitiRepository
+import com.example.unimarketplace.data.local.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MarketplaceViewModel(
-    private val repository: AnnuncioRepository
+    private val repository: AnnuncioRepository,
+    private val preferitiRepository: PreferitiRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _allAnnunci = MutableStateFlow<List<Annuncio>>(emptyList())
 
     private val _annunciFiltrati = MutableStateFlow<List<Annuncio>>(emptyList())
     val annunciFiltrati: StateFlow<List<Annuncio>> = _annunciFiltrati.asStateFlow()
+
+    private val _preferitiIds = MutableStateFlow<Set<Long>>(emptySet())
+    val preferitiIds: StateFlow<Set<Long>> = _preferitiIds.asStateFlow()
 
     private val _categoriaSelezionata = MutableStateFlow("Tutte")
     val categoriaSelezionata: StateFlow<String> = _categoriaSelezionata.asStateFlow()
@@ -32,6 +40,7 @@ class MarketplaceViewModel(
 
     init {
         caricaAnnunci()
+        osservaPreferiti()
     }
 
     private fun caricaAnnunci() {
@@ -40,6 +49,22 @@ class MarketplaceViewModel(
                 _allAnnunci.value = lista
                 applicaFiltri()
             }
+        }
+    }
+
+    private fun osservaPreferiti() {
+        val utenteId = sessionManager.getUserId() ?: return
+        viewModelScope.launch {
+            preferitiRepository.getPreferitiByUtente(utenteId).collectLatest { ids ->
+                _preferitiIds.value = ids.toSet()
+            }
+        }
+    }
+
+    fun togglePreferito(annuncioId: Long) {
+        val utenteId = sessionManager.getUserId() ?: return
+        viewModelScope.launch {
+            preferitiRepository.togglePreferito(utenteId, annuncioId)
         }
     }
 

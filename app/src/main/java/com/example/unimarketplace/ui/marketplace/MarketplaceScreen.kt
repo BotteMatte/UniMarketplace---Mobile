@@ -65,6 +65,7 @@ fun MarketplaceScreen(
 
     // Lista filtrata dal ViewModel
     val annunci by marketplaceViewModel.annunciFiltrati.collectAsState()
+    val preferitiIds by marketplaceViewModel.preferitiIds.collectAsState()
 
     // Testo della barra di ricerca
     var testoRicerca by remember { mutableStateOf("") }
@@ -392,10 +393,14 @@ fun MarketplaceScreen(
                             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)
                         ) {
                             items(annunci.size) { index ->
+                                val annuncio = annunci[index]
+                                val isFavorite = preferitiIds.contains(annuncio.id)
                                 MarketplaceItemCard(
                                     isDarkTheme = isDarkTheme,
-                                    annuncio = annunci[index],
-                                    onClick = { onNavigateToDetail(annunci[index].id) }
+                                    annuncio = annuncio,
+                                    isFavorite = isFavorite,
+                                    onToggleFavorite = { marketplaceViewModel.togglePreferito(annuncio.id) },
+                                    onClick = { onNavigateToDetail(annuncio.id) }
                                 )
                             }
                         }
@@ -445,15 +450,26 @@ fun FilterChipCompact(label: String, value: String, isDarkTheme: Boolean, onClic
 }
 
 @Composable
-fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio, onClick: () -> Unit = {}) {
+fun MarketplaceItemCard(
+    isDarkTheme: Boolean,
+    annuncio: Annuncio,
+    isFavorite: Boolean = false,
+    onToggleFavorite: () -> Unit = {},
+    onClick: () -> Unit = {}
+) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0)
+        )
     ) {
         Column {
-            // Immagine di copertina
+            // Immagine di copertina + Cuoricino
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -474,6 +490,23 @@ fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio, onClick: () ->
                         contentDescription = "Nessuna immagine",
                         tint = Color.Gray,
                         modifier = Modifier.size(48.dp)
+                    )
+                }
+
+                // Tasto Preferiti in alto a destra
+                IconButton(
+                    onClick = { onToggleFavorite() },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .background(Color.White.copy(alpha = 0.7f), CircleShape)
+                        .size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Preferiti",
+                        tint = if (isFavorite) Color.Red else Color.DarkGray,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

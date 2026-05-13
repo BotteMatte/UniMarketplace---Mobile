@@ -18,6 +18,7 @@ import com.example.unimarketplace.data.local.AppDatabase
 import com.example.unimarketplace.data.local.SessionManager
 import com.example.unimarketplace.data.local.UniMarketDatabase
 import com.example.unimarketplace.data.repository.AnnuncioRepositoryImpl
+import com.example.unimarketplace.data.repository.PreferitiRepositoryImpl
 import com.example.unimarketplace.data.repository.UserRepositoryImpl
 import com.example.unimarketplace.ui.auth.AuthScreen
 import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
@@ -61,6 +62,7 @@ fun AppNavigation(
     val sessionManager = SessionManager(context)
     val uniDatabase = UniMarketDatabase.getInstance(context)
     val annuncioRepository = AnnuncioRepositoryImpl(uniDatabase.annuncioDao())
+    val preferitiRepository = PreferitiRepositoryImpl(uniDatabase.preferitiDao())
 
     val authViewModel: AuthViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
@@ -88,7 +90,7 @@ fun AppNavigation(
         // Schermata Home (Marketplace)
         composable(Screen.Marketplace.route) {
             val marketplaceViewModel: MarketplaceViewModel = viewModel(
-                factory = MarketplaceViewModelFactory(annuncioRepository)
+                factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, sessionManager)
             )
             MarketplaceScreen(
                 isDarkTheme = isDarkTheme,
@@ -174,7 +176,7 @@ fun AppNavigation(
             )
 
             val marketplaceViewModel: MarketplaceViewModel = viewModel(
-                factory = MarketplaceViewModelFactory(annuncioRepository)
+                factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, sessionManager)
             )
 
             CreateAnnuncioScreen(
