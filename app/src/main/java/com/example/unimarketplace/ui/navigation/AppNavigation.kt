@@ -31,6 +31,8 @@ import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModelF
 import com.example.unimarketplace.ui.profile.ProfileScreen
 import com.example.unimarketplace.ui.cart.CartScreen
 import android.app.Application
+import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModel
+import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModelFactory
 
 /**
  * Screen: Definizione delle rotte dell'applicazione.
@@ -98,7 +100,10 @@ fun AppNavigation(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                 onNavigateToCart = { navController.navigate(Screen.Cart.route) },
-                onNavigateToCreateAnnuncio = { navController.navigate(Screen.CreateAnnuncio.route) }
+                onNavigateToCreateAnnuncio = { navController.navigate(Screen.CreateAnnuncio.route) },
+                onNavigateToDetail = { annuncioId ->
+                    navController.navigate(Screen.AnnuncioDetail.createRoute(annuncioId))
+                }
             )
         }
 
@@ -146,8 +151,14 @@ fun AppNavigation(
             arguments = listOf(navArgument("annuncioId") { type = NavType.LongType })
         ) { backStackEntry ->
             val annuncioId = backStackEntry.arguments?.getLong("annuncioId") ?: return@composable
+
+            val detailViewModel: AnnuncioDetailViewModel = viewModel(
+                factory = AnnuncioDetailViewModelFactory(annuncioRepository)
+            )
+
             AnnuncioDetailScreen(
                 annuncioId = annuncioId,
+                viewModel = detailViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

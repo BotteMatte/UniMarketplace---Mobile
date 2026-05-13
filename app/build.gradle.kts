@@ -66,6 +66,9 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.0.1")
     // Permessi Activity Result
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+
+    // Google Maps per Compose
+    implementation("com.google.maps.android:maps-compose:4.3.0")
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

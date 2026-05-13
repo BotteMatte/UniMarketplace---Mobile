@@ -1,193 +1,231 @@
 package com.example.unimarketplace.ui.marketplace
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.unimarketplace.R
-import com.example.unimarketplace.UniMarketApp
-import java.text.SimpleDateFormat
-import java.util.*
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.unimarketplace.domain.model.Annuncio
+import com.example.unimarketplace.domain.model.Categoria
+import com.example.unimarketplace.domain.model.Condizioni
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnnuncioDetailScreen(
     annuncioId: Long,
-    onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    viewModel: AnnuncioDetailViewModel,
+    onNavigateBack: () -> Unit
 ) {
-    val context = LocalContext.current
-    val app = context.applicationContext as UniMarketApp
-    val getAnnuncioByIdUseCase = app.getAnnuncioByIdUseCase
-
-    val viewModel: AnnuncioDetailViewModel = viewModel(
-        factory = AnnuncioDetailViewModelFactory(getAnnuncioByIdUseCase)
-    )
-
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val annuncio by viewModel.annuncio.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     LaunchedEffect(annuncioId) {
         viewModel.loadAnnuncio(annuncioId)
     }
 
+    // TODO: Caricare l'annuncio dal database usando l'annuncioId
+    // Per ora mostriamo un esempio
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Dettaglio Annuncio") },
+                title = { Text("Dettaglio Annuncio", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
-        },
-        modifier = modifier
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                uiState.error != null -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = uiState.error ?: "Errore sconosciuto",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.loadAnnuncio(annuncioId) }) {
-                            Text("Riprova")
-                        }
-                    }
-                }
-                uiState.annuncio != null -> {
-                    val annuncio = uiState.annuncio!!
-                    val scrollState = rememberScrollState()
-                    val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(scrollState)
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Immagine segnaposto
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground), // Usa un'icona o immagine segnaposto
+        }
+    ) { padding ->
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (annuncio != null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Immagine di copertina
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .background(Color(0xFFE2E8F0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (annuncio!!.immagini.isNotEmpty()) {
+                        AsyncImage(
+                            model = annuncio!!.immagini.first(),
                             contentDescription = "Immagine annuncio",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
+                    } else {
+                        Icon(
+                            Icons.Default.Image,
+                            contentDescription = null,
+                            tint = Color.Gray,
+                            modifier = Modifier.size(64.dp)
+                        )
+                    }
+                }
 
-                        // Titolo
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Titolo e Prezzo
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = annuncio.titolo,
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
+                            text = annuncio!!.titolo,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 24.sp,
+                            modifier = Modifier.weight(1f)
                         )
-
-                        // Prezzo
                         Text(
-                            text = "€${String.format("%.2f", annuncio.prezzo)}",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.primary
+                            text = "€${String.format("%.2f", annuncio!!.prezzo)}",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 24.sp,
+                            color = Color(0xFF2563EB)
                         )
+                    }
 
-                        // Chip categoria e condizioni
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    // Chip Categoria e Condizioni
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(annuncio!!.categoria.name) },
+                            leadingIcon = {
+                                Icon(Icons.Default.Category, contentDescription = null, modifier = Modifier.size(16.dp))
+                            }
+                        )
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(annuncio!!.condizioni.name) },
+                            leadingIcon = {
+                                Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(16.dp))
+                            }
+                        )
+                    }
+
+                    HorizontalDivider()
+
+                    // Descrizione
+                    Text("Descrizione", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(
+                        text = annuncio!!.descrizione,
+                        fontSize = 16.sp,
+                        color = Color.Gray
+                    )
+
+                    HorizontalDivider()
+
+                    // Venditore
+                    Text("Venditore", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = annuncio!!.venditoreNome,
+                            fontSize = 16.sp,
+                            color = Color.Gray
+                        )
+                    }
+
+                    HorizontalDivider()
+
+                    // Posizione (se disponibile)
+                    if (annuncio!!.latitudine != 0.0 && annuncio!!.longitudine != 0.0) {
+                        Text("Posizione", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+
+                        // Informazioni indirizzo
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC))
                         ) {
-                            SuggestionChip(
-                                onClick = { },
-                                label = { Text(annuncio.categoria.name) }
-                            )
-                            SuggestionChip(
-                                onClick = { },
-                                label = { Text(annuncio.condizioni.name) }
-                            )
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                if (annuncio!!.indirizzo.isNotEmpty()) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Gray)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(annuncio!!.indirizzo, fontSize = 14.sp)
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                }
+                                if (annuncio!!.citta.isNotEmpty()) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.LocationCity, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Gray)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(annuncio!!.citta, fontSize = 14.sp)
+                                    }
+                                }
+                            }
                         }
 
-                        // Descrizione
-                        Text(
-                            text = annuncio.descrizione,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                        // Venditore
-                        Text(
-                            text = "Venditore: ${annuncio.venditoreNome}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        // Mappa
+                        val posizione = LatLng(annuncio!!.latitudine, annuncio!!.longitudine)
+                        val cameraPositionState = rememberCameraPositionState {
+                            position = CameraPosition.fromLatLngZoom(posizione, 15f)
+                        }
 
-                        // Data pubblicazione
-                        Text(
-                            text = "Pubblicato: ${dateFormat.format(Date(annuncio.dataPubblicazione))}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        // Pulsanti
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        Card(
+                            modifier = Modifier.fillMaxWidth().height(250.dp),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            FilledTonalButton(
-                                onClick = { /* Toggle preferiti */ },
-                                modifier = Modifier.weight(1f)
+                            GoogleMap(
+                                modifier = Modifier.fillMaxSize(),
+                                cameraPositionState = cameraPositionState
                             ) {
-                                Icon(
-                                    imageVector = if (uiState.isPreferito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                    contentDescription = "Preferiti"
+                                Marker(
+                                    state = MarkerState(position = posizione),
+                                    title = annuncio!!.titolo
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Salva")
-                            }
-
-                            Button(
-                                onClick = { /* Contatta venditore */ },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Email,
-                                    contentDescription = "Contatta"
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Contatta")
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
+            }
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Annuncio non trovato", color = Color.Gray)
             }
         }
     }

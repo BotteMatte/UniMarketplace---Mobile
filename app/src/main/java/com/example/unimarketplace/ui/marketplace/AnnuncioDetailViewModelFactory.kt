@@ -2,16 +2,15 @@ package com.example.unimarketplace.ui.marketplace
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.unimarketplace.domain.usecase.GetAnnuncioByIdUseCase
+import com.example.unimarketplace.domain.repository.AnnuncioRepository
 
 class AnnuncioDetailViewModelFactory(
-    private val getAnnuncioByIdUseCase: GetAnnuncioByIdUseCase
+    private val repository: AnnuncioRepository
 ) : ViewModelProvider.Factory {
-
-    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(AnnuncioDetailViewModel::class.java)) {
-            return AnnuncioDetailViewModel(getAnnuncioByIdUseCase) as T
+            @Suppress("UNCHECKED_CAST")
+            return AnnuncioDetailViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

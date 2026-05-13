@@ -36,6 +36,7 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModel
+import com.example.unimarketplace.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +51,8 @@ fun MarketplaceScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToCart: () -> Unit,
-    onNavigateToCreateAnnuncio: () -> Unit
+    onNavigateToCreateAnnuncio: () -> Unit,
+    onNavigateToDetail: (Long) -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -392,7 +394,8 @@ fun MarketplaceScreen(
                             items(annunci.size) { index ->
                                 MarketplaceItemCard(
                                     isDarkTheme = isDarkTheme,
-                                    annuncio = annunci[index]
+                                    annuncio = annunci[index],
+                                    onClick = { onNavigateToDetail(annunci[index].id) }
                                 )
                             }
                         }
@@ -442,9 +445,9 @@ fun FilterChipCompact(label: String, value: String, isDarkTheme: Boolean, onClic
 }
 
 @Composable
-fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio) {
+fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
