@@ -1,10 +1,13 @@
 package com.example.unimarketplace.ui.marketplace
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -51,6 +54,7 @@ fun MarketplaceScreen(
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
 
     // Stati dai filtri del ViewModel
     val categoriaSelezionata by marketplaceViewModel.categoriaSelezionata.collectAsState()
@@ -62,6 +66,10 @@ fun MarketplaceScreen(
 
     // Testo della barra di ricerca
     var testoRicerca by remember { mutableStateOf("") }
+
+    // Stato per compattare i filtri durante lo scroll
+    val isScrolled = listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 100
+    val filtriCompatti by animateDpAsState(if (isScrolled) 0.dp else 1.dp, label = "filtri")
 
     // Per far apparire il drawer a destra, forziamo RTL
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -106,63 +114,258 @@ fun MarketplaceScreen(
                 Scaffold(
                     modifier = modifier,
                     topBar = {
-                        TopAppBar(
-                            title = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .background(Color(0xFF2563EB), RoundedCornerShape(8.dp)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(20.dp)
+                        Column {
+                            // TopBar fissa
+                            TopAppBar(
+                                title = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .background(Color(0xFF2563EB), RoundedCornerShape(8.dp)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                                                contentDescription = null,
+                                                tint = Color.White,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = "UniboMarket",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(
-                                        text = "UniboMarket",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            },
-                            actions = {
-                                IconButton(
-                                    onClick = {
-                                        if (userName != null) {
-                                            onNavigateToCreateAnnuncio()
-                                        } else {
-                                            onNavigateToLogin()
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = "Add",
-                                        tint = Color.White
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Menu,
-                                        contentDescription = "Menu",
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surface
+                                },
+                                actions = {
+                                    IconButton(
+                                        onClick = {
+                                            if (userName != null) {
+                                                onNavigateToCreateAnnuncio()
+                                            } else {
+                                                onNavigateToLogin()
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Add",
+                                            tint = Color.White
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Menu,
+                                            contentDescription = "Menu",
+                                            tint = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                },
+                                colors = TopAppBarDefaults.topAppBarColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                )
                             )
-                        )
+
+                            // Barra di ricerca sempre visibile (compatta)
+                            OutlinedTextField(
+                                value = testoRicerca,
+                                onValueChange = {
+                                    testoRicerca = it
+                                    marketplaceViewModel.setQueryRicerca(it)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = if (isScrolled) 8.dp else 12.dp)
+                                    .height(if (isScrolled) 48.dp else 56.dp),
+                                placeholder = { Text(
+                                    text = if (isScrolled) "Cerca..." else "Cerca libri, appunti, corsi...",
+                                    color = Color.Gray,
+                                    fontSize = if (isScrolled) 14.sp else 16.sp
+                                ) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = null,
+                                        tint = Color.Gray,
+                                        modifier = Modifier.size(if (isScrolled) 18.dp else 24.dp)
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (testoRicerca.isNotEmpty()) {
+                                        IconButton(onClick = {
+                                            testoRicerca = ""
+                                            marketplaceViewModel.setQueryRicerca("")
+                                        }) {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = "Cancella",
+                                                tint = Color.Gray,
+                                                modifier = Modifier.size(if (isScrolled) 16.dp else 20.dp)
+                                            )
+                                        }
+                                    }
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                singleLine = true,
+                                textStyle = LocalTextStyle.current.copy(fontSize = if (isScrolled) 13.sp else 16.sp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
+                                    focusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedBorderColor = Color(0xFFCBD5E1)
+                                )
+                            )
+
+                            // Filtri compatti o espansi
+                            if (!isScrolled) {
+                                // FILTRI ESPANSI
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 4.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            // Categoria
+                                            var expandedFacolta by remember { mutableStateOf(false) }
+                                            Box(modifier = Modifier.weight(1f)) {
+                                                FilterChipCompact(
+                                                    label = "Categoria",
+                                                    value = if (categoriaSelezionata == "Tutte") "Tutte" else categoriaSelezionata,
+                                                    isDarkTheme = isDarkTheme,
+                                                    onClick = { expandedFacolta = true }
+                                                )
+                                                DropdownMenu(
+                                                    expanded = expandedFacolta,
+                                                    onDismissRequest = { expandedFacolta = false }
+                                                ) {
+                                                    listOf("Tutte", "LIBRI", "APPUNTI", "DISPENSE", "MATERIALE_LABORATORIO", "ALTRO").forEach { option ->
+                                                        DropdownMenuItem(
+                                                            text = { Text(option, fontSize = 13.sp) },
+                                                            onClick = {
+                                                                marketplaceViewModel.setCategoria(option)
+                                                                expandedFacolta = false
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                            // Condizioni
+                                            var expandedCondizione by remember { mutableStateOf(false) }
+                                            Box(modifier = Modifier.weight(1f)) {
+                                                FilterChipCompact(
+                                                    label = "Condizione",
+                                                    value = if (condizioniSelezionate == "Tutte") "Tutte" else condizioniSelezionate,
+                                                    isDarkTheme = isDarkTheme,
+                                                    onClick = { expandedCondizione = true }
+                                                )
+                                                DropdownMenu(
+                                                    expanded = expandedCondizione,
+                                                    onDismissRequest = { expandedCondizione = false }
+                                                ) {
+                                                    listOf("Tutte", "NUOVO", "OTTIMO", "BUONO", "USATO").forEach { option ->
+                                                        DropdownMenuItem(
+                                                            text = { Text(option, fontSize = 13.sp) },
+                                                            onClick = {
+                                                                marketplaceViewModel.setCondizioni(option)
+                                                                expandedCondizione = false
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        // Prezzo slider
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Max €${prezzoMassimo.toInt()}",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.sp,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                modifier = Modifier.width(70.dp)
+                                            )
+                                            Slider(
+                                                value = prezzoMassimo,
+                                                onValueChange = { marketplaceViewModel.setPrezzoMassimo(it) },
+                                                valueRange = 0f..200f,
+                                                modifier = Modifier.weight(1f),
+                                                colors = SliderDefaults.colors(
+                                                    thumbColor = Color.White,
+                                                    activeTrackColor = if (isDarkTheme) Color(0xFF3B82F6) else Color(0xFF0F172A),
+                                                    inactiveTrackColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFE2E8F0)
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                // FILTRI COMPATTI (solo chips orizzontali)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    if (categoriaSelezionata != "Tutte") {
+                                        AssistChip(
+                                            onClick = { marketplaceViewModel.setCategoria("Tutte") },
+                                            label = { Text(categoriaSelezionata, fontSize = 11.sp) },
+                                            trailingIcon = {
+                                                Icon(Icons.Default.Close, contentDescription = "Rimuovi", modifier = Modifier.size(14.dp))
+                                            },
+                                            modifier = Modifier.height(28.dp)
+                                        )
+                                    }
+                                    if (condizioniSelezionate != "Tutte") {
+                                        AssistChip(
+                                            onClick = { marketplaceViewModel.setCondizioni("Tutte") },
+                                            label = { Text(condizioniSelezionate, fontSize = 11.sp) },
+                                            trailingIcon = {
+                                                Icon(Icons.Default.Close, contentDescription = "Rimuovi", modifier = Modifier.size(14.dp))
+                                            },
+                                            modifier = Modifier.height(28.dp)
+                                        )
+                                    }
+                                    if (prezzoMassimo < 200f) {
+                                        AssistChip(
+                                            onClick = { marketplaceViewModel.setPrezzoMassimo(200f) },
+                                            label = { Text("Max €${prezzoMassimo.toInt()}", fontSize = 11.sp) },
+                                            trailingIcon = {
+                                                Icon(Icons.Default.Close, contentDescription = "Rimuovi", modifier = Modifier.size(14.dp))
+                                            },
+                                            modifier = Modifier.height(28.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 ) { padding ->
                     Column(
@@ -170,148 +373,21 @@ fun MarketplaceScreen(
                             .fillMaxSize()
                             .padding(padding)
                             .background(MaterialTheme.colorScheme.background)
-                            .padding(horizontal = 16.dp)
                     ) {
-                        // Search Bar FUNZIONANTE
-                        OutlinedTextField(
-                            value = testoRicerca,
-                            onValueChange = {
-                                testoRicerca = it
-                                marketplaceViewModel.setQueryRicerca(it)
-                            },
-                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                            placeholder = { Text("Cerca libri, appunti, corsi...", color = Color.Gray) },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
-                            trailingIcon = {
-                                if (testoRicerca.isNotEmpty()) {
-                                    IconButton(onClick = {
-                                        testoRicerca = ""
-                                        marketplaceViewModel.setQueryRicerca("")
-                                    }) {
-                                        Icon(Icons.Default.Close, contentDescription = "Cancella", tint = Color.Gray)
-                                    }
-                                }
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
-                                focusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
-                                unfocusedBorderColor = Color.Transparent,
-                                focusedBorderColor = Color(0xFFCBD5E1)
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // Filters Card
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
-                        ) {
-                            Column(modifier = Modifier.padding(24.dp)) {
-                                Text(
-                                    text = "Filtri di ricerca",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(24.dp))
-
-                                // Categoria Dropdown
-                                var expandedFacolta by remember { mutableStateOf(false) }
-                                Box {
-                                    FilterDropdown(
-                                        label = "Categoria",
-                                        value = categoriaSelezionata,
-                                        isDarkTheme = isDarkTheme,
-                                        onClick = { expandedFacolta = true }
-                                    )
-                                    DropdownMenu(
-                                        expanded = expandedFacolta,
-                                        onDismissRequest = { expandedFacolta = false }
-                                    ) {
-                                        listOf("Tutte", "LIBRI", "APPUNTI", "DISPENSE", "MATERIALE_LABORATORIO", "ALTRO").forEach { option ->
-                                            DropdownMenuItem(
-                                                text = { Text(option) },
-                                                onClick = {
-                                                    marketplaceViewModel.setCategoria(option)
-                                                    expandedFacolta = false
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                // Condizioni Dropdown
-                                var expandedCondizione by remember { mutableStateOf(false) }
-                                Box {
-                                    FilterDropdown(
-                                        label = "Condizione",
-                                        value = condizioniSelezionate,
-                                        isDarkTheme = isDarkTheme,
-                                        onClick = { expandedCondizione = true }
-                                    )
-                                    DropdownMenu(
-                                        expanded = expandedCondizione,
-                                        onDismissRequest = { expandedCondizione = false }
-                                    ) {
-                                        listOf("Tutte", "NUOVO", "OTTIMO", "BUONO", "USATO").forEach { option ->
-                                            DropdownMenuItem(
-                                                text = { Text(option) },
-                                                onClick = {
-                                                    marketplaceViewModel.setCondizioni(option)
-                                                    expandedCondizione = false
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                // Slider Prezzo
-                                Text(
-                                    text = "Prezzo massimo: €${prezzoMassimo.toInt()}",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Slider(
-                                    value = prezzoMassimo,
-                                    onValueChange = { marketplaceViewModel.setPrezzoMassimo(it) },
-                                    valueRange = 0f..200f,
-                                    colors = SliderDefaults.colors(
-                                        thumbColor = Color.White,
-                                        activeTrackColor = if (isDarkTheme) Color(0xFF3B82F6) else Color(0xFF0F172A),
-                                        inactiveTrackColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFE2E8F0)
-                                    ),
-                                    modifier = Modifier.padding(vertical = 8.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(32.dp))
-
                         // Numero annunci trovati
                         Text(
                             text = "${annunci.size} annunci trovati",
                             fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            color = Color.Gray
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Lista annunci reali
+                        // Lista annunci
                         LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            contentPadding = PaddingValues(bottom = 24.dp)
+                            state = listState,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)
                         ) {
                             items(annunci.size) { index ->
                                 MarketplaceItemCard(
@@ -328,13 +404,13 @@ fun MarketplaceScreen(
 }
 
 @Composable
-fun FilterDropdown(label: String, value: String, isDarkTheme: Boolean, onClick: () -> Unit) {
+fun FilterChipCompact(label: String, value: String, isDarkTheme: Boolean, onClick: () -> Unit) {
     Column {
         Text(
             text = label,
             fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(bottom = 8.dp),
+            fontSize = 11.sp,
+            modifier = Modifier.padding(bottom = 4.dp),
             color = MaterialTheme.colorScheme.onSurface
         )
         Box(
@@ -346,15 +422,20 @@ fun FilterDropdown(label: String, value: String, isDarkTheme: Boolean, onClick: 
                 )
                 .border(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
                 .clickable { onClick() }
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 10.dp, vertical = 8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = value, color = if (isDarkTheme) Color.LightGray else Color.Gray)
-                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null, tint = Color.Gray)
+                Text(text = value, color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp)
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
     }
@@ -364,7 +445,7 @@ fun FilterDropdown(label: String, value: String, isDarkTheme: Boolean, onClick: 
 fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
     ) {
@@ -373,7 +454,7 @@ fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(180.dp)
                     .background(if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFE2E8F0)),
                 contentAlignment = Alignment.Center
             ) {
@@ -389,12 +470,12 @@ fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio) {
                         imageVector = Icons.Default.Image,
                         contentDescription = "Nessuna immagine",
                         tint = Color.Gray,
-                        modifier = Modifier.size(64.dp)
+                        modifier = Modifier.size(48.dp)
                     )
                 }
             }
 
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -403,32 +484,35 @@ fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio) {
                     Text(
                         text = annuncio.titolo,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
                     )
                     Text(
                         text = "€${String.format("%.2f", annuncio.prezzo)}",
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         color = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF2563EB)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = annuncio.descrizione,
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     color = Color.Gray,
                     maxLines = 2
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     SuggestionChip(
                         onClick = { },
-                        label = { Text(annuncio.condizioni.name) }
+                        label = { Text(annuncio.condizioni.name, fontSize = 11.sp) },
+                        modifier = Modifier.height(24.dp)
                     )
                     SuggestionChip(
                         onClick = { },
-                        label = { Text(annuncio.categoria.name) }
+                        label = { Text(annuncio.categoria.name, fontSize = 11.sp) },
+                        modifier = Modifier.height(24.dp)
                     )
                 }
             }

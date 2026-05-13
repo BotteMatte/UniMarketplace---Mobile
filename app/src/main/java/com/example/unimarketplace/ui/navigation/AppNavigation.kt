@@ -156,10 +156,19 @@ fun AppNavigation(
             val createAnnuncioViewModel: CreateAnnuncioViewModel = viewModel(
                 factory = CreateAnnuncioViewModelFactory(annuncioRepository, sessionManager)
             )
+
+            // Ottieni il ViewModel del marketplace per forzare il refresh
+            val marketplaceViewModel: MarketplaceViewModel = viewModel(
+                factory = MarketplaceViewModelFactory(annuncioRepository)
+            )
+
             CreateAnnuncioScreen(
                 viewModel = createAnnuncioViewModel,
                 onBack = { navController.popBackStack() },
-                onSuccess = { navController.popBackStack() }
+                onSuccess = {
+                    marketplaceViewModel.refreshAnnunci()
+                    navController.popBackStack()
+                }
             )
         }
     }
