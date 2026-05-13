@@ -23,17 +23,16 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModel
-import coil.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
-// Rimosso il Preview perché richiederebbe un ViewModel fittizio
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +40,7 @@ fun MarketplaceScreen(
     modifier: Modifier = Modifier,
     isDarkTheme: Boolean,
     onThemeToggle: () -> Unit,
-    marketplaceViewModel: MarketplaceViewModel,   // <-- NUOVO PARAMETRO
+    marketplaceViewModel: MarketplaceViewModel,
     userName: String? = null,
     onLogout: () -> Unit = {},
     onNavigateToLogin: () -> Unit,
@@ -53,13 +52,16 @@ fun MarketplaceScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Stati per i filtri (ancora mock, poi li collegherai al ViewModel)
-    var selectedFacolta by remember { mutableStateOf("Tutte") }
-    var selectedCondizione by remember { mutableStateOf("Tutte") }
-    var maxPrice by remember { mutableFloatStateOf(100f) }
+    // Stati dai filtri del ViewModel
+    val categoriaSelezionata by marketplaceViewModel.categoriaSelezionata.collectAsState()
+    val condizioniSelezionate by marketplaceViewModel.condizioniSelezionate.collectAsState()
+    val prezzoMassimo by marketplaceViewModel.prezzoMassimo.collectAsState()
 
-    // Otteniamo la lista reale degli annunci dal ViewModel
-    val annunci by marketplaceViewModel.annunci.collectAsState()
+    // Lista filtrata dal ViewModel
+    val annunci by marketplaceViewModel.annunciFiltrati.collectAsState()
+
+    // Testo della barra di ricerca
+    var testoRicerca by remember { mutableStateOf("") }
 
     // Per far apparire il drawer a destra, forziamo RTL
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -170,14 +172,28 @@ fun MarketplaceScreen(
                             .background(MaterialTheme.colorScheme.background)
                             .padding(horizontal = 16.dp)
                     ) {
-                        // Search Bar
+                        // Search Bar FUNZIONANTE
                         OutlinedTextField(
-                            value = "",
-                            onValueChange = { },
+                            value = testoRicerca,
+                            onValueChange = {
+                                testoRicerca = it
+                                marketplaceViewModel.setQueryRicerca(it)
+                            },
                             modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                             placeholder = { Text("Cerca libri, appunti, corsi...", color = Color.Gray) },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
+                            trailingIcon = {
+                                if (testoRicerca.isNotEmpty()) {
+                                    IconButton(onClick = {
+                                        testoRicerca = ""
+                                        marketplaceViewModel.setQueryRicerca("")
+                                    }) {
+                                        Icon(Icons.Default.Close, contentDescription = "Cancella", tint = Color.Gray)
+                                    }
+                                }
+                            },
                             shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
                                 focusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
@@ -188,7 +204,7 @@ fun MarketplaceScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Filters Card (per ora lasciamo mock, poi potrai collegare filtri reali)
+                        // Filters Card
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
@@ -205,11 +221,12 @@ fun MarketplaceScreen(
                                 )
                                 Spacer(modifier = Modifier.height(24.dp))
 
+                                // Categoria Dropdown
                                 var expandedFacolta by remember { mutableStateOf(false) }
                                 Box {
                                     FilterDropdown(
-                                        label = "Facoltà",
-                                        value = selectedFacolta,
+                                        label = "Categoria",
+                                        value = categoriaSelezionata,
                                         isDarkTheme = isDarkTheme,
                                         onClick = { expandedFacolta = true }
                                     )
@@ -217,11 +234,11 @@ fun MarketplaceScreen(
                                         expanded = expandedFacolta,
                                         onDismissRequest = { expandedFacolta = false }
                                     ) {
-                                        listOf("Tutte", "Ingegneria", "Economia", "Medicina", "Lettere").forEach { option ->
+                                        listOf("Tutte", "LIBRI", "APPUNTI", "DISPENSE", "MATERIALE_LABORATORIO", "ALTRO").forEach { option ->
                                             DropdownMenuItem(
                                                 text = { Text(option) },
                                                 onClick = {
-                                                    selectedFacolta = option
+                                                    marketplaceViewModel.setCategoria(option)
                                                     expandedFacolta = false
                                                 }
                                             )
@@ -231,11 +248,12 @@ fun MarketplaceScreen(
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
+                                // Condizioni Dropdown
                                 var expandedCondizione by remember { mutableStateOf(false) }
                                 Box {
                                     FilterDropdown(
                                         label = "Condizione",
-                                        value = selectedCondizione,
+                                        value = condizioniSelezionate,
                                         isDarkTheme = isDarkTheme,
                                         onClick = { expandedCondizione = true }
                                     )
@@ -243,11 +261,11 @@ fun MarketplaceScreen(
                                         expanded = expandedCondizione,
                                         onDismissRequest = { expandedCondizione = false }
                                     ) {
-                                        listOf("Tutte", "Nuovo", "Ottimo", "Buono", "Usato").forEach { option ->
+                                        listOf("Tutte", "NUOVO", "OTTIMO", "BUONO", "USATO").forEach { option ->
                                             DropdownMenuItem(
                                                 text = { Text(option) },
                                                 onClick = {
-                                                    selectedCondizione = option
+                                                    marketplaceViewModel.setCondizioni(option)
                                                     expandedCondizione = false
                                                 }
                                             )
@@ -257,15 +275,16 @@ fun MarketplaceScreen(
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
+                                // Slider Prezzo
                                 Text(
-                                    text = "Prezzo massimo: €${maxPrice.toInt()}",
+                                    text = "Prezzo massimo: €${prezzoMassimo.toInt()}",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Slider(
-                                    value = maxPrice,
-                                    onValueChange = { maxPrice = it },
+                                    value = prezzoMassimo,
+                                    onValueChange = { marketplaceViewModel.setPrezzoMassimo(it) },
                                     valueRange = 0f..200f,
                                     colors = SliderDefaults.colors(
                                         thumbColor = Color.White,
@@ -279,7 +298,7 @@ fun MarketplaceScreen(
 
                         Spacer(modifier = Modifier.height(32.dp))
 
-                        // Mostriamo il numero reale di annunci
+                        // Numero annunci trovati
                         Text(
                             text = "${annunci.size} annunci trovati",
                             fontWeight = FontWeight.Medium,
@@ -350,7 +369,7 @@ fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio) {
         border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
     ) {
         Column {
-            // Immagine di copertina (prima immagine o placeholder)
+            // Immagine di copertina
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -359,7 +378,6 @@ fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio) {
                 contentAlignment = Alignment.Center
             ) {
                 if (annuncio.immagini.isNotEmpty()) {
-                    // Carica la prima immagine dalla lista
                     AsyncImage(
                         model = annuncio.immagini.first(),
                         contentDescription = "Immagine annuncio",
@@ -367,7 +385,6 @@ fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio) {
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    // Placeholder se non ci sono immagini
                     Icon(
                         imageVector = Icons.Default.Image,
                         contentDescription = "Nessuna immagine",
@@ -404,14 +421,21 @@ fun MarketplaceItemCard(isDarkTheme: Boolean, annuncio: Annuncio) {
                     maxLines = 2
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                SuggestionChip(
-                    onClick = { },
-                    label = { Text(annuncio.condizioni.name) }
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SuggestionChip(
+                        onClick = { },
+                        label = { Text(annuncio.condizioni.name) }
+                    )
+                    SuggestionChip(
+                        onClick = { },
+                        label = { Text(annuncio.categoria.name) }
+                    )
+                }
             }
         }
     }
 }
+
 @Composable
 fun DrawerContent(
     onClose: () -> Unit,
