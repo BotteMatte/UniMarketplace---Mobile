@@ -66,6 +66,7 @@ fun MarketplaceScreen(
     // Lista filtrata dal ViewModel
     val annunci by marketplaceViewModel.annunciFiltrati.collectAsState()
     val preferitiIds by marketplaceViewModel.preferitiIds.collectAsState()
+    val carrelloIds by marketplaceViewModel.carrelloIds.collectAsState()
 
     // Testo della barra di ricerca
     var testoRicerca by remember { mutableStateOf("") }
@@ -395,10 +396,12 @@ fun MarketplaceScreen(
                             items(annunci.size) { index ->
                                 val annuncio = annunci[index]
                                 val isFavorite = preferitiIds.contains(annuncio.id)
+                                val isInCart = carrelloIds.contains(annuncio.id)
                                 MarketplaceItemCard(
                                     isDarkTheme = isDarkTheme,
                                     annuncio = annuncio,
                                     isFavorite = isFavorite,
+                                    isInCart = isInCart,
                                     onToggleFavorite = { marketplaceViewModel.togglePreferito(annuncio.id) },
                                     onClick = { onNavigateToDetail(annuncio.id) }
                                 )
@@ -454,6 +457,7 @@ fun MarketplaceItemCard(
     isDarkTheme: Boolean,
     annuncio: Annuncio,
     isFavorite: Boolean = false,
+    isInCart: Boolean = false,
     onToggleFavorite: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
@@ -491,6 +495,36 @@ fun MarketplaceItemCard(
                         tint = Color.Gray,
                         modifier = Modifier.size(48.dp)
                     )
+                }
+
+                // Badge "Già nel carrello"
+                if (isInCart) {
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(8.dp),
+                        color = Color(0xFF10B981),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Nel carrello",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
 
                 // Tasto Preferiti in alto a destra

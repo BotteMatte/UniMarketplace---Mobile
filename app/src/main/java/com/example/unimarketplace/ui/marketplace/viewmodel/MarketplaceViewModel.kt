@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
+import com.example.unimarketplace.domain.repository.CarrelloRepository
 import com.example.unimarketplace.domain.repository.PreferitiRepository
 import com.example.unimarketplace.data.local.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 class MarketplaceViewModel(
     private val repository: AnnuncioRepository,
     private val preferitiRepository: PreferitiRepository,
+    private val carrelloRepository: CarrelloRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -25,6 +27,9 @@ class MarketplaceViewModel(
 
     private val _preferitiIds = MutableStateFlow<Set<Long>>(emptySet())
     val preferitiIds: StateFlow<Set<Long>> = _preferitiIds.asStateFlow()
+
+    private val _carrelloIds = MutableStateFlow<Set<Long>>(emptySet())
+    val carrelloIds: StateFlow<Set<Long>> = _carrelloIds.asStateFlow()
 
     private val _categoriaSelezionata = MutableStateFlow("Tutte")
     val categoriaSelezionata: StateFlow<String> = _categoriaSelezionata.asStateFlow()
@@ -41,6 +46,7 @@ class MarketplaceViewModel(
     init {
         caricaAnnunci()
         osservaPreferiti()
+        osservaCarrello()
     }
 
     private fun caricaAnnunci() {
@@ -57,6 +63,15 @@ class MarketplaceViewModel(
         viewModelScope.launch {
             preferitiRepository.getPreferitiByUtente(utenteId).collectLatest { ids ->
                 _preferitiIds.value = ids.toSet()
+            }
+        }
+    }
+
+    private fun osservaCarrello() {
+        val utenteId = sessionManager.getUserId() ?: return
+        viewModelScope.launch {
+            carrelloRepository.getCarrelloByUtente(utenteId).collectLatest { ids ->
+                _carrelloIds.value = ids.toSet()
             }
         }
     }

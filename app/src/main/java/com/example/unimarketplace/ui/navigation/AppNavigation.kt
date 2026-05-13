@@ -94,7 +94,7 @@ fun AppNavigation(
         // Schermata Home (Marketplace)
         composable(Screen.Marketplace.route) {
             val marketplaceViewModel: MarketplaceViewModel = viewModel(
-                factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, sessionManager)
+                factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, carrelloRepository, sessionManager)
             )
             MarketplaceScreen(
                 isDarkTheme = isDarkTheme,
@@ -185,7 +185,7 @@ fun AppNavigation(
             )
 
             val marketplaceViewModel: MarketplaceViewModel = viewModel(
-                factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, sessionManager)
+                factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, carrelloRepository, sessionManager)
             )
 
             CreateAnnuncioScreen(
