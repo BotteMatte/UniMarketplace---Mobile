@@ -25,6 +25,9 @@ class AnnuncioDetailViewModel(
         it?.venditoreId == sessionManager.getUserId() 
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    private val _isInCart = MutableStateFlow(false)
+    val isInCart: StateFlow<Boolean> = _isInCart.asStateFlow()
+
     private val _isAddedToCart = MutableStateFlow(false)
     val isAddedToCart: StateFlow<Boolean> = _isAddedToCart.asStateFlow()
 
@@ -37,6 +40,16 @@ class AnnuncioDetailViewModel(
             try {
                 val annuncio = repository.getAnnuncioById(id)
                 _annuncio.value = annuncio
+                
+                // Controlla se è nel carrello in una coroutine separata per non bloccare il caricamento
+                val userId = sessionManager.getUserId()
+                if (userId != null && annuncio != null) {
+                    launch {
+                        carrelloRepository.getCarrelloByUtente(userId).collectLatest { ids ->
+                            _isInCart.value = ids.contains(annuncio.id)
+                        }
+                    }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -63,6 +76,16 @@ class AnnuncioDetailViewModel(
             carrelloRepository.aggiungiAlCarrello(userId, currentAnnuncio.id)
             _isAddedToCart.value = true
             _errorMessage.value = null
+        }
+    }
+
+    fun rimuoviDalCarrello() {
+        val currentAnnuncio = _annuncio.value ?: return
+        val userId = sessionManager.getUserId() ?: return
+
+        viewModelScope.launch {
+            carrelloRepository.rimuoviDalCarrello(userId, currentAnnuncio.id)
+            _isAddedToCart.value = false // Resetta lo stato di aggiunta
         }
     }
 

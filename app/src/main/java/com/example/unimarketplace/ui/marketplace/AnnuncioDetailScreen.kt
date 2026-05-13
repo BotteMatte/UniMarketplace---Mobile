@@ -43,6 +43,7 @@ fun AnnuncioDetailScreen(
     val annuncio by viewModel.annuncio.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isAddedToCart by viewModel.isAddedToCart.collectAsState()
+    val isInCart by viewModel.isInCart.collectAsState()
     val isOwnAnnuncio by viewModel.isOwnAnnuncio.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -106,20 +107,30 @@ fun AnnuncioDetailScreen(
                         }
                     } else {
                         Button(
-                            onClick = { viewModel.aggiungiAlCarrello() },
+                            onClick = { 
+                                if (isInCart) viewModel.rimuoviDalCarrello() 
+                                else viewModel.aggiungiAlCarrello() 
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp)
                                 .height(56.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isDarkTheme) Color.White else Color(0xFF0F172A),
-                                contentColor = if (isDarkTheme) Color.Black else Color.White
+                                containerColor = if (isInCart) Color(0xFFEF4444) else (if (isDarkTheme) Color.White else Color(0xFF0F172A)),
+                                contentColor = if (isInCart) Color.White else (if (isDarkTheme) Color.Black else Color.White)
                             )
                         ) {
-                            Icon(Icons.Default.AddShoppingCart, contentDescription = null)
+                            Icon(
+                                imageVector = if (isInCart) Icons.Default.RemoveShoppingCart else Icons.Default.AddShoppingCart, 
+                                contentDescription = null
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Aggiungi al carrello", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(
+                                text = if (isInCart) "Rimuovi dal carrello" else "Aggiungi al carrello", 
+                                fontWeight = FontWeight.Bold, 
+                                fontSize = 16.sp
+                            )
                         }
                     }
                 }
