@@ -21,6 +21,9 @@ class CartViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _checkoutSuccess = MutableSharedFlow<Boolean>()
+    val checkoutSuccess = _checkoutSuccess.asSharedFlow()
+
     init {
         loadCartItems()
     }
@@ -54,6 +57,30 @@ class CartViewModel(
         val userId = sessionManager.getUserId() ?: return
         viewModelScope.launch {
             carrelloRepository.svuotaCarrello(userId)
+        }
+    }
+
+    fun procediAlPagamento() {
+        val userId = sessionManager.getUserId() ?: return
+        val currentItems = _cartItems.value
+        if (currentItems.isEmpty()) return
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Segna ogni annuncio come venduto
+                currentItems.forEach { annuncio ->
+                    annuncioRepository.updateAnnuncio(annuncio.copy(isVenduto = true))
+                }
+                // Svuota il carrello
+                carrelloRepository.svuotaCarrello(userId)
+                _checkoutSuccess.emit(true)
+            } catch (e: Exception) {
+                // Gestione errore se necessaria
+                _checkoutSuccess.emit(false)
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }

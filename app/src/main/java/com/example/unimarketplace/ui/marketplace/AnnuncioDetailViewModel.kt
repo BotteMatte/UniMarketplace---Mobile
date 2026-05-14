@@ -81,6 +81,11 @@ class AnnuncioDetailViewModel(
             return
         }
 
+        if (currentAnnuncio.isVenduto) {
+            _errorMessage.value = "Questo articolo è già stato venduto"
+            return
+        }
+
         viewModelScope.launch {
             carrelloRepository.aggiungiAlCarrello(userId, currentAnnuncio.id)
             _isAddedToCart.value = true

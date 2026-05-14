@@ -33,6 +33,37 @@ fun CartScreen(
     val cartItems by viewModel.cartItems.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
+    var showSuccessDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.checkoutSuccess.collect { success ->
+            if (success) {
+                showSuccessDialog = true
+            }
+        }
+    }
+
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showSuccessDialog = false
+                onContinueShopping() // Torna al marketplace dopo l'acquisto
+            },
+            title = { Text("Acquisto effettuato") },
+            text = { Text("Il tuo ordine è stato elaborato con successo. Grazie per il tuo acquisto!") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSuccessDialog = false
+                        onContinueShopping()
+                    }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
     val subtotal = cartItems.sumOf { it.prezzo }
     val shipping = 0.0
     val total = subtotal + shipping
@@ -114,7 +145,7 @@ fun CartScreen(
                         shipping = shipping,
                         total = total,
                         isDarkTheme = isDarkTheme,
-                        onCheckout = { /* TODO */ },
+                        onCheckout = { viewModel.procediAlPagamento() },
                         onContinueShopping = onContinueShopping
                     )
                 }
@@ -212,6 +243,9 @@ fun CartItemCard(item: Annuncio, isDarkTheme: Boolean, onRemove: () -> Unit) {
                 }
                 Text(text = item.descrizione, fontSize = 14.sp, color = Color.Gray, maxLines = 1)
                 Text(text = item.venditoreNome, fontSize = 14.sp, color = Color.Gray)
+                if (item.isVenduto) {
+                    Text(text = "NON PIÙ DISPONIBILE", fontSize = 12.sp, color = Color.Red, fontWeight = FontWeight.Bold)
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "€${item.prezzo.toInt()}",

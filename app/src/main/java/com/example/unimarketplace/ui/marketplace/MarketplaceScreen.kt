@@ -543,6 +543,22 @@ fun MarketplaceItemCard(
                             )
                         }
                     }
+                } else if (annuncio.isVenduto) {
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(8.dp),
+                        color = Color.Red,
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = "VENDUTO",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 // Tasto Preferiti in alto a destra
