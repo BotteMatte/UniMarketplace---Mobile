@@ -153,7 +153,7 @@ fun AuthCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = if (isLoginMode) "Accedi a UniboMarket" else "Registrati su UniboMarket",
+                text = if (isLoginMode) "Accedi a UniMarketplace" else "Registrati su UniMarketplace",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,

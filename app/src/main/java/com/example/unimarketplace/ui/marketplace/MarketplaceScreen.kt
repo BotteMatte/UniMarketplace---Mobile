@@ -150,7 +150,7 @@ fun MarketplaceScreen(
                                         }
                                         Spacer(modifier = Modifier.width(12.dp))
                                         Text(
-                                            text = "UniboMarket",
+                                            text = "UniMarketplace",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 20.sp,
                                             color = MaterialTheme.colorScheme.onSurface
@@ -651,7 +651,7 @@ fun DrawerContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "UniboMarket",
+                text = "UniMarketplace",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 color = MaterialTheme.colorScheme.onSurface
