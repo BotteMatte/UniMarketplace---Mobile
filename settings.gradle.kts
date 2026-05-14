@@ -1,3 +1,10 @@
+// Carica local.properties
+val localProperties = java.util.Properties()
+val localFile = File(rootDir, "local.properties")
+if (localFile.exists()) {
+    localProperties.load(localFile.inputStream())
+}
+
 pluginManagement {
     repositories {
         google {

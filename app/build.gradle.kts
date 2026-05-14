@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.ksp)
+}
+
+// Legge la chiave da local.properties
+val localProperties = Properties()
+try {
+    localProperties.load(rootProject.file("local.properties").inputStream())
+} catch (e: Exception) {
+    // File non trovato
 }
 
 android {
@@ -19,7 +29,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        manifestPlaceholders["MAPS_API_KEY"] = project.findProperty("MAPS_API_KEY") ?: ""
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY") ?: ""
     }
 
     buildTypes {
@@ -61,12 +71,8 @@ dependencies {
     // Google Maps e Location
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
-
-// Geocoding (per reverse geocoding)
-    implementation("com.google.android.gms:play-services-location:21.0.1")
     // Permessi Activity Result
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
-
     // Google Maps per Compose
     implementation("com.google.maps.android:maps-compose:4.3.0")
     ksp(libs.androidx.room.compiler)
