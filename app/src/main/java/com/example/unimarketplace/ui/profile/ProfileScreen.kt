@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.unimarketplace.domain.model.Annuncio
+import com.example.unimarketplace.domain.model.Badge
 import com.example.unimarketplace.ui.profile.viewmodel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,6 +39,7 @@ fun ProfileScreen(
 ) {
     val stats by viewModel.stats.collectAsState()
     val userAnnunci by viewModel.userAnnunci.collectAsState()
+    val userBadges by viewModel.userBadges.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
     Scaffold(
@@ -67,6 +70,12 @@ fun ProfileScreen(
                 // User Info Section
                 item {
                     UserInfoSection(userName)
+                }
+
+                if (userBadges.isNotEmpty()) {
+                    item {
+                        BadgesSection(userBadges)
+                    }
                 }
 
                 item {
@@ -160,6 +169,69 @@ fun ProfileScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun BadgesSection(badges: List<Badge>) {
+    Column {
+        Text(
+            text = "I Tuoi Badge",
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        
+        // Grid-like layout for badges
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            badges.forEach { badge ->
+                BadgeItem(badge, modifier = Modifier.weight(1f))
+            }
+            // Fill with empty spaces if less than 3 badges to keep alignment (optional)
+            if (badges.size < 3) {
+                repeat(3 - badges.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BadgeItem(badge: Badge, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.height(80.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFD700).copy(alpha = 0.15f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD700))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                tint = Color(0xFFB8860B),
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = badge.type.titolo,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFB8860B),
+                maxLines = 1
+            )
         }
     }
 }
@@ -307,11 +379,6 @@ fun UserInfoSection(userName: String) {
                 text = userName,
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp
-            )
-            Text(
-                text = "Studente Unibo",
-                color = Color.Gray,
-                fontSize = 16.sp
             )
         }
     }

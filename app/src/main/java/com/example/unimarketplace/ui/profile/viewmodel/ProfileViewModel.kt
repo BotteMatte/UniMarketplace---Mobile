@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.unimarketplace.data.local.SessionManager
 import com.example.unimarketplace.domain.model.Annuncio
+import com.example.unimarketplace.domain.model.Badge
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
+import com.example.unimarketplace.domain.repository.BadgeRepository
+import com.example.unimarketplace.util.BadgeManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -18,6 +21,8 @@ data class ProfileStats(
 
 class ProfileViewModel(
     private val annuncioRepository: AnnuncioRepository,
+    private val badgeRepository: BadgeRepository,
+    private val badgeManager: BadgeManager,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -26,6 +31,9 @@ class ProfileViewModel(
 
     private val _userAnnunci = MutableStateFlow<List<Annuncio>>(emptyList())
     val userAnnunci: StateFlow<List<Annuncio>> = _userAnnunci.asStateFlow()
+
+    private val _userBadges = MutableStateFlow<List<Badge>>(emptyList())
+    val userBadges: StateFlow<List<Badge>> = _userBadges.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -38,6 +46,13 @@ class ProfileViewModel(
         val userId = sessionManager.getUserId() ?: return
         viewModelScope.launch {
             _isLoading.value = true
+
+            launch {
+                badgeRepository.getBadgesByUtente(userId).collectLatest { badges ->
+                    _userBadges.value = badges
+                }
+            }
+
             annuncioRepository.getAnnunciByVenditore(userId).collectLatest { annunci ->
                 _userAnnunci.value = annunci
                 
@@ -61,8 +76,10 @@ class ProfileViewModel(
     }
 
     fun segnaComeVenduto(annuncio: Annuncio) {
+        val userId = sessionManager.getUserId() ?: return
         viewModelScope.launch {
             annuncioRepository.updateAnnuncio(annuncio.copy(isVenduto = true))
+            badgeManager.checkVendite(userId)
         }
     }
 

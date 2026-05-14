@@ -6,12 +6,14 @@ import com.example.unimarketplace.data.local.SessionManager
 import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
 import com.example.unimarketplace.domain.repository.CarrelloRepository
+import com.example.unimarketplace.util.BadgeManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class CartViewModel(
     private val carrelloRepository: CarrelloRepository,
     private val annuncioRepository: AnnuncioRepository,
+    private val badgeManager: BadgeManager,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -68,10 +70,17 @@ class CartViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Segna ogni annuncio come venduto
+                // Segna ogni annuncio come venduto e assegna il compratore
                 currentItems.forEach { annuncio ->
-                    annuncioRepository.updateAnnuncio(annuncio.copy(isVenduto = true))
+                    annuncioRepository.updateAnnuncio(annuncio.copy(isVenduto = true, compratoreId = userId))
+                    // Check badge per il venditore
+                    badgeManager.checkVendite(annuncio.venditoreId)
                 }
+                
+                // Check badge per il compratore
+                val updatedAllAnnunci = annuncioRepository.getAllAnnunci().first()
+                badgeManager.checkAcquisti(userId, updatedAllAnnunci)
+
                 // Svuota il carrello
                 carrelloRepository.svuotaCarrello(userId)
                 _checkoutSuccess.emit(true)

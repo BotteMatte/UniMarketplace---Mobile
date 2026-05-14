@@ -10,6 +10,7 @@ import com.example.unimarketplace.domain.model.Condizioni
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
 import com.example.unimarketplace.util.location.LocationHelper
 import com.example.unimarketplace.util.location.Posizione
+import com.example.unimarketplace.util.BadgeManager
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -20,6 +21,7 @@ import java.util.Date
 class CreateAnnuncioViewModel(
     application: Application,
     private val repository: AnnuncioRepository,
+    private val badgeManager: BadgeManager,
     private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
 
@@ -126,6 +128,13 @@ class CreateAnnuncioViewModel(
             try {
                 repository.insertAnnuncio(annuncio)
                 _createResult.emit(CreateResult.Success("Annuncio creato con successo!"))
+                
+                // Badge checks
+                badgeManager.checkNovizio(userId)
+                badgeManager.checkDilettante(userId)
+                if (immagini.isNotEmpty()) {
+                    badgeManager.checkFotografo(userId, true)
+                }
             } catch (e: Exception) {
                 _createResult.emit(CreateResult.Error("Errore: ${e.message}"))
             }

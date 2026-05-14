@@ -23,6 +23,7 @@ data class AnnuncioEntity(
     @ColumnInfo(name = "venditore_nome") val venditoreNome: String,
     @ColumnInfo(name = "venditore_email") val venditoreEmail: String = "",
     @ColumnInfo(name = "is_venduto") val isVenduto: Boolean = false,
+    @ColumnInfo(name = "compratore_id") val compratoreId: Long? = null,
     // Nuovi campi geolocalizzazione
     val latitudine: Double = 0.0,
     val longitudine: Double = 0.0,

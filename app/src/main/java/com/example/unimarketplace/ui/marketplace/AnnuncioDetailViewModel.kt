@@ -7,6 +7,7 @@ import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
 import com.example.unimarketplace.domain.repository.CarrelloRepository
 import com.example.unimarketplace.domain.repository.PreferitiRepository
+import com.example.unimarketplace.util.BadgeManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -14,6 +15,7 @@ class AnnuncioDetailViewModel(
     private val repository: AnnuncioRepository,
     private val carrelloRepository: CarrelloRepository,
     private val preferitiRepository: PreferitiRepository,
+    private val badgeManager: BadgeManager,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -119,9 +121,11 @@ class AnnuncioDetailViewModel(
 
     fun segnaComeVenduto() {
         val currentAnnuncio = _annuncio.value ?: return
+        val userId = sessionManager.getUserId() ?: return
         viewModelScope.launch {
             repository.updateAnnuncio(currentAnnuncio.copy(isVenduto = true))
             _annuncio.value = repository.getAnnuncioById(currentAnnuncio.id)
+            badgeManager.checkVendite(userId)
         }
     }
 

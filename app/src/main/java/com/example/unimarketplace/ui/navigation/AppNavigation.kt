@@ -1,6 +1,7 @@
 package com.example.unimarketplace.ui.navigation
 
 import android.app.Application
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -16,10 +17,8 @@ import androidx.navigation.navArgument
 import com.example.unimarketplace.data.local.AppDatabase
 import com.example.unimarketplace.data.local.SessionManager
 import com.example.unimarketplace.data.local.UniMarketDatabase
-import com.example.unimarketplace.data.repository.AnnuncioRepositoryImpl
-import com.example.unimarketplace.data.repository.CarrelloRepositoryImpl
-import com.example.unimarketplace.data.repository.PreferitiRepositoryImpl
-import com.example.unimarketplace.data.repository.UserRepositoryImpl
+import com.example.unimarketplace.data.repository.*
+import com.example.unimarketplace.domain.model.BadgeType
 import com.example.unimarketplace.ui.auth.AuthScreen
 import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
 import com.example.unimarketplace.ui.cart.CartScreen
@@ -28,11 +27,7 @@ import com.example.unimarketplace.ui.cart.viewmodel.CartViewModelFactory
 import com.example.unimarketplace.ui.favorites.FavoritesScreen
 import com.example.unimarketplace.ui.favorites.viewmodel.FavoritesViewModel
 import com.example.unimarketplace.ui.favorites.viewmodel.FavoritesViewModelFactory
-import com.example.unimarketplace.ui.marketplace.AnnuncioDetailScreen
-import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModel
-import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModelFactory
-import com.example.unimarketplace.ui.marketplace.CreateAnnuncioScreen
-import com.example.unimarketplace.ui.marketplace.MarketplaceScreen
+import com.example.unimarketplace.ui.marketplace.*
 import com.example.unimarketplace.ui.marketplace.viewmodel.CreateAnnuncioViewModel
 import com.example.unimarketplace.ui.marketplace.viewmodel.CreateAnnuncioViewModelFactory
 import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModel
@@ -40,6 +35,7 @@ import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModelF
 import com.example.unimarketplace.ui.profile.ProfileScreen
 import com.example.unimarketplace.ui.profile.viewmodel.ProfileViewModel
 import com.example.unimarketplace.ui.profile.viewmodel.ProfileViewModelFactory
+import com.example.unimarketplace.util.BadgeManager
 
 sealed class Screen(val route: String) {
     object Marketplace : Screen("marketplace")
@@ -71,6 +67,38 @@ fun AppNavigation(
     val annuncioRepository = AnnuncioRepositoryImpl(uniDatabase.annuncioDao())
     val preferitiRepository = PreferitiRepositoryImpl(uniDatabase.preferitiDao())
     val carrelloRepository = CarrelloRepositoryImpl(uniDatabase.carrelloDao())
+    val badgeRepository = BadgeRepositoryImpl(uniDatabase.badgeDao())
+    val badgeManager = remember { BadgeManager(badgeRepository, annuncioRepository) }
+
+    // Popup per i badge guadagnati
+    var showBadgeDialog by remember { mutableStateOf<BadgeType?>(null) }
+    
+    LaunchedEffect(badgeManager) {
+        badgeManager.newBadgeEarned.collect { badgeType ->
+            showBadgeDialog = badgeType
+        }
+    }
+
+    if (showBadgeDialog != null) {
+        AlertDialog(
+            onDismissRequest = { showBadgeDialog = null },
+            title = { Text("Nuovo Badge Ricevuto!") },
+            text = { Text("Hai ottenuto il badge: ${showBadgeDialog?.titolo}!\nVai a controllare nel tuo profilo.") },
+            confirmButton = {
+                Button(onClick = { showBadgeDialog = null }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // Check Animale Notturno
+    LaunchedEffect(isDarkTheme) {
+        val userId = sessionManager.getUserId()
+        if (userId != null && isDarkTheme) {
+            badgeManager.checkAnimaleNotturno(userId, true)
+        }
+    }
 
     val authViewModel: AuthViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
@@ -120,7 +148,7 @@ fun AppNavigation(
 
         composable(Screen.Profile.route) {
             val profileViewModel: ProfileViewModel = viewModel(
-                factory = ProfileViewModelFactory(annuncioRepository, sessionManager)
+                factory = ProfileViewModelFactory(annuncioRepository, badgeRepository, badgeManager, sessionManager)
             )
             ProfileScreen(
                 viewModel = profileViewModel,
@@ -133,7 +161,7 @@ fun AppNavigation(
 
         composable(Screen.Cart.route) {
             val cartViewModel: CartViewModel = viewModel(
-                factory = CartViewModelFactory(carrelloRepository, annuncioRepository, sessionManager)
+                factory = CartViewModelFactory(carrelloRepository, annuncioRepository, badgeManager, sessionManager)
             )
             CartScreen(
                 viewModel = cartViewModel,
@@ -184,7 +212,7 @@ fun AppNavigation(
             val annuncioId = backStackEntry.arguments?.getLong("annuncioId") ?: return@composable
 
             val detailViewModel: AnnuncioDetailViewModel = viewModel(
-                factory = AnnuncioDetailViewModelFactory(annuncioRepository, carrelloRepository, preferitiRepository, sessionManager)
+                factory = AnnuncioDetailViewModelFactory(annuncioRepository, carrelloRepository, preferitiRepository, badgeManager, sessionManager)
             )
 
             AnnuncioDetailScreen(
@@ -211,6 +239,7 @@ fun AppNavigation(
                 factory = CreateAnnuncioViewModelFactory(
                     context.applicationContext as Application,
                     annuncioRepository,
+                    badgeManager,
                     sessionManager
                 )
             )
@@ -236,6 +265,7 @@ fun AppNavigation(
                 factory = CreateAnnuncioViewModelFactory(
                     context.applicationContext as Application,
                     annuncioRepository,
+                    badgeManager,
                     sessionManager
                 )
             )
