@@ -11,6 +11,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,7 +73,7 @@ fun AuthScreen(
                 .padding(innerPadding)
                 .background(Color(0xFFF8FAFC))
                 .verticalScroll(rememberScrollState())
-                .imePadding()  // <-- AGGIUNTO: spinge il contenuto sopra la tastiera
+                .imePadding()
         ) {
             // Top Bar
             Row(
@@ -117,7 +120,6 @@ fun AuthScreen(
                 }
             )
 
-            // Spazio extra in fondo per evitare che il bottone venga tagliato
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
@@ -194,13 +196,11 @@ fun AuthCard(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            AuthTextField(
+            // Password con toggle visibilità
+            PasswordTextField(
                 label = "Password",
                 value = password,
-                onValueChange = onPasswordChange,
-                icon = Icons.Default.Lock,
-                placeholder = "",
-                isPassword = true
+                onValueChange = onPasswordChange
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -245,6 +245,60 @@ fun AuthCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun PasswordTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF0F172A),
+            modifier = Modifier.padding(bottom = 10.dp, start = 2.dp)
+        )
+
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = Color(0xFF94A3B8),
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (passwordVisible) "Nascondi password" else "Mostra password",
+                        tint = Color(0xFF94A3B8),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = Color(0xFFF1F5F9),
+                focusedContainerColor = Color(0xFFF1F5F9),
+                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = Color(0xFFCBD5E1),
+                disabledBorderColor = Color.Transparent
+            ),
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            singleLine = true
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun AuthTextField(
     label: String,
     value: String,
@@ -283,7 +337,7 @@ fun AuthTextField(
                 focusedBorderColor = Color(0xFFCBD5E1),
                 disabledBorderColor = Color.Transparent
             ),
-            visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+            visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
             singleLine = true
         )
     }
