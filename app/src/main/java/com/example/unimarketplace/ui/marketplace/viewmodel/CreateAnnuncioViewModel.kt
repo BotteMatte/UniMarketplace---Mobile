@@ -61,8 +61,9 @@ class CreateAnnuncioViewModel(
     ) {
         val userId = sessionManager.getUserId()
         val userName = sessionManager.getUserName()
+        val userEmail = sessionManager.getUserEmail()
 
-        if (userId == null || userName == null) {
+        if (userId == null || userName == null || userEmail == null) {
             viewModelScope.launch {
                 _createResult.emit(CreateResult.Error("Devi essere loggato per creare un annuncio."))
             }
@@ -89,6 +90,7 @@ class CreateAnnuncioViewModel(
             dataPubblicazione = Date().time,
             venditoreId = userId,
             venditoreNome = userName,
+            venditoreEmail = userEmail,
             isVenduto = false,
             latitudine = posizioneAttuale?.latitudine ?: 0.0,
             longitudine = posizioneAttuale?.longitudine ?: 0.0,

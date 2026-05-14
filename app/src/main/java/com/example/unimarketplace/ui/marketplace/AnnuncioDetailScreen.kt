@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.unimarketplace.domain.model.Annuncio
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -48,6 +51,7 @@ fun AnnuncioDetailScreen(
     val isOwnAnnuncio by viewModel.isOwnAnnuncio.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(annuncioId) {
         viewModel.loadAnnuncio(annuncioId)
@@ -149,31 +153,62 @@ fun AnnuncioDetailScreen(
                                 )
                             }
                         } else {
-                            Button(
-                                onClick = { 
-                                    if (isInCart) viewModel.rimuoviDalCarrello() 
-                                    else viewModel.aggiungiAlCarrello() 
-                                },
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp)
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isInCart) Color(0xFFEF4444) else (if (isDarkTheme) Color.White else Color(0xFF0F172A)),
-                                    contentColor = if (isInCart) Color.White else (if (isDarkTheme) Color.Black else Color.White)
-                                )
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(
-                                    imageVector = if (isInCart) Icons.Default.RemoveShoppingCart else Icons.Default.AddShoppingCart, 
-                                    contentDescription = null
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isInCart) "Rimuovi dal carrello" else "Aggiungi al carrello", 
-                                    fontWeight = FontWeight.Bold, 
-                                    fontSize = 16.sp
-                                )
+                                Button(
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                            data = Uri.parse("mailto:${annuncio!!.venditoreEmail}")
+                                            putExtra(Intent.EXTRA_SUBJECT, "Interesse per: ${annuncio!!.titolo}")
+                                            putExtra(Intent.EXTRA_TEXT, "Ciao ${annuncio!!.venditoreNome}, sono interessato al tuo annuncio '${annuncio!!.titolo}'.")
+                                        }
+                                        try {
+                                            context.startActivity(Intent.createChooser(intent, "Invia email..."))
+                                        } catch (e: Exception) {
+                                            // Fallback se non ci sono app email
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFEA4335), // Gmail Red
+                                        contentColor = Color.White
+                                    )
+                                ) {
+                                    Icon(Icons.Default.Email, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Contatta il venditore", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                }
+
+                                Button(
+                                    onClick = { 
+                                        if (isInCart) viewModel.rimuoviDalCarrello() 
+                                        else viewModel.aggiungiAlCarrello() 
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (isInCart) Color(0xFFEF4444) else (if (isDarkTheme) Color.White else Color(0xFF0F172A)),
+                                        contentColor = if (isInCart) Color.White else (if (isDarkTheme) Color.Black else Color.White)
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = if (isInCart) Icons.Default.RemoveShoppingCart else Icons.Default.AddShoppingCart, 
+                                        contentDescription = null
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isInCart) "Rimuovi dal carrello" else "Aggiungi al carrello", 
+                                        fontWeight = FontWeight.Bold, 
+                                        fontSize = 16.sp
+                                    )
+                                }
                             }
                         }
                     }
