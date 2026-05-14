@@ -9,6 +9,7 @@ import com.example.unimarketplace.domain.model.Categoria
 import com.example.unimarketplace.domain.model.Condizioni
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
 import com.example.unimarketplace.util.location.LocationHelper
+import com.example.unimarketplace.util.location.Posizione
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -27,11 +28,15 @@ class CreateAnnuncioViewModel(
     private val _createResult = MutableSharedFlow<CreateResult>()
     val createResult = _createResult.asSharedFlow()
 
-    private val _posizione = MutableStateFlow<com.example.unimarketplace.util.location.Posizione?>(null)
+    private val _posizione = MutableStateFlow<Posizione?>(null)
     val posizione = _posizione.asStateFlow()
 
     private val _isLoadingLocation = MutableStateFlow(false)
     val isLoadingLocation = _isLoadingLocation.asStateFlow()
+
+    // Per la modifica: annuncio da modificare
+    private val _annuncioToEdit = MutableStateFlow<Annuncio?>(null)
+    val annuncioToEdit = _annuncioToEdit.asStateFlow()
 
     init {
         getCurrentLocation()
@@ -47,6 +52,23 @@ class CreateAnnuncioViewModel(
                 _createResult.emit(CreateResult.Error("Errore nel rilevamento della posizione: ${e.message}"))
             } finally {
                 _isLoadingLocation.value = false
+            }
+        }
+    }
+
+    fun loadAnnuncioForEdit(annuncioId: Long) {
+        viewModelScope.launch {
+            val annuncio = repository.getAnnuncioById(annuncioId)
+            _annuncioToEdit.value = annuncio
+            if (annuncio != null && annuncio.latitudine != 0.0) {
+                _posizione.value = Posizione(
+                    latitudine = annuncio.latitudine,
+                    longitudine = annuncio.longitudine,
+                    indirizzo = annuncio.indirizzo,
+                    citta = annuncio.citta,
+                    cap = annuncio.cap,
+                    provincia = annuncio.provincia
+                )
             }
         }
     }
@@ -102,6 +124,53 @@ class CreateAnnuncioViewModel(
             try {
                 repository.insertAnnuncio(annuncio)
                 _createResult.emit(CreateResult.Success("Annuncio creato con successo!"))
+            } catch (e: Exception) {
+                _createResult.emit(CreateResult.Error("Errore: ${e.message}"))
+            }
+        }
+    }
+
+    fun updateAnnuncio(
+        annuncioId: Long,
+        titolo: String,
+        descrizione: String,
+        prezzo: Double,
+        categoria: Categoria,
+        condizioni: Condizioni,
+        immagini: List<String>
+    ) {
+        val userId = sessionManager.getUserId()
+        val userName = sessionManager.getUserName()
+
+        if (userId == null || userName == null) {
+            viewModelScope.launch {
+                _createResult.emit(CreateResult.Error("Devi essere loggato."))
+            }
+            return
+        }
+
+        val posizioneAttuale = _posizione.value
+        val oldAnnuncio = _annuncioToEdit.value ?: return
+
+        val annuncio = oldAnnuncio.copy(
+            titolo = titolo,
+            descrizione = descrizione,
+            prezzo = prezzo,
+            categoria = categoria,
+            condizioni = condizioni,
+            immagini = immagini,
+            latitudine = posizioneAttuale?.latitudine ?: oldAnnuncio.latitudine,
+            longitudine = posizioneAttuale?.longitudine ?: oldAnnuncio.longitudine,
+            indirizzo = posizioneAttuale?.indirizzo ?: oldAnnuncio.indirizzo,
+            citta = posizioneAttuale?.citta ?: oldAnnuncio.citta,
+            cap = posizioneAttuale?.cap ?: oldAnnuncio.cap,
+            provincia = posizioneAttuale?.provincia ?: oldAnnuncio.provincia
+        )
+
+        viewModelScope.launch {
+            try {
+                repository.updateAnnuncio(annuncio)
+                _createResult.emit(CreateResult.Success("Annuncio aggiornato con successo!"))
             } catch (e: Exception) {
                 _createResult.emit(CreateResult.Error("Errore: ${e.message}"))
             }

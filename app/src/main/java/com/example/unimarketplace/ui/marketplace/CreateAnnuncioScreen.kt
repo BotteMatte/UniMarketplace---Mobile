@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -25,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -44,14 +46,15 @@ import java.util.UUID
 fun CreateAnnuncioScreen(
     viewModel: CreateAnnuncioViewModel,
     onBack: () -> Unit,
-    onSuccess: () -> Unit
+    onSuccess: () -> Unit,
+    isEditMode: Boolean = false
 ) {
     val context = LocalContext.current
     val createResult by viewModel.createResult.collectAsState(initial = null)
     val posizione by viewModel.posizione.collectAsState()
     val isLoadingLocation by viewModel.isLoadingLocation.collectAsState()
+    val annuncioToEdit by viewModel.annuncioToEdit.collectAsState()
 
-    // Richiesta permesso di localizzazione
     val locationPermissionState = rememberPermissionState(
         permission = Manifest.permission.ACCESS_FINE_LOCATION
     )
@@ -72,14 +75,24 @@ fun CreateAnnuncioScreen(
 
     var showSuccessDialog by remember { mutableStateOf(false) }
 
-    // Quando il permesso viene concesso, rileva la posizione
+    // Inizializza i campi in modalità modifica
+    LaunchedEffect(annuncioToEdit) {
+        annuncioToEdit?.let {
+            titolo = it.titolo
+            descrizione = it.descrizione
+            prezzo = it.prezzo.toString()
+            categoriaSelezionata = it.categoria
+            condizioniSelezionate = it.condizioni
+            immaginiUri = it.immagini.map { uri -> Uri.parse(uri) }
+        }
+    }
+
     LaunchedEffect(locationPermissionState.status.isGranted) {
         if (locationPermissionState.status.isGranted) {
             viewModel.getCurrentLocation()
         }
     }
 
-    // Launcher per galleria
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -91,7 +104,6 @@ fun CreateAnnuncioScreen(
         }
     }
 
-    // Launcher per fotocamera
     var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
@@ -120,7 +132,7 @@ fun CreateAnnuncioScreen(
                 onSuccess()
             },
             title = { Text("Successo!") },
-            text = { Text("Annuncio creato con successo!") },
+            text = { Text(if (isEditMode) "Annuncio aggiornato con successo!" else "Annuncio creato con successo!") },
             confirmButton = {
                 TextButton(onClick = {
                     showSuccessDialog = false
@@ -136,7 +148,7 @@ fun CreateAnnuncioScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Crea Annuncio", fontWeight = FontWeight.Bold) },
+                title = { Text(if (isEditMode) "Modifica Annuncio" else "Crea Annuncio", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
@@ -156,7 +168,7 @@ fun CreateAnnuncioScreen(
             // Titolo
             OutlinedTextField(
                 value = titolo,
-                onValueChange = { 
+                onValueChange = {
                     titolo = it
                     if (it.isNotBlank()) errorTitolo = false
                 },
@@ -170,7 +182,7 @@ fun CreateAnnuncioScreen(
             // Descrizione
             OutlinedTextField(
                 value = descrizione,
-                onValueChange = { 
+                onValueChange = {
                     descrizione = it
                     if (it.isNotBlank()) errorDescrizione = false
                 },
@@ -185,7 +197,7 @@ fun CreateAnnuncioScreen(
             // Prezzo
             OutlinedTextField(
                 value = prezzo,
-                onValueChange = { 
+                onValueChange = {
                     prezzo = it
                     if (it.toDoubleOrNull() != null && it.toDouble() > 0) errorPrezzo = false
                 },
@@ -195,7 +207,7 @@ fun CreateAnnuncioScreen(
                 leadingIcon = { Text("€", fontWeight = FontWeight.Bold) },
                 isError = errorPrezzo,
                 supportingText = { if (errorPrezzo) Text("Inserisci un prezzo valido maggiore di 0") },
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
 
             // Categoria
@@ -322,9 +334,7 @@ fun CreateAnnuncioScreen(
                 }
             }
 
-            // =============================================
-            // SEZIONE POSIZIONE CON RICHIESTA PERMESSI
-            // =============================================
+            // Posizione
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -351,7 +361,6 @@ fun CreateAnnuncioScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Se il permesso non è concesso, mostra il pulsante per richiederlo
                     if (!locationPermissionState.status.isGranted) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -371,9 +380,7 @@ fun CreateAnnuncioScreen(
                                 Text("Consenti accesso alla posizione", fontSize = 14.sp)
                             }
                         }
-                    }
-                    // Se il permesso è concesso e la posizione è disponibile
-                    else if (posizione != null) {
+                    } else if (posizione != null) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -418,9 +425,7 @@ fun CreateAnnuncioScreen(
                                 Text("Provincia: ${posizione!!.provincia}", fontSize = 13.sp, color = Color.Gray)
                             }
                         }
-                    }
-                    // Permesso concesso ma posizione non ancora rilevata
-                    else if (!isLoadingLocation) {
+                    } else if (!isLoadingLocation) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.fillMaxWidth()
@@ -444,7 +449,7 @@ fun CreateAnnuncioScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Bottone Crea
+            // Bottone Crea / Salva modifiche
             Button(
                 onClick = {
                     errorTitolo = titolo.isBlank()
@@ -453,23 +458,35 @@ fun CreateAnnuncioScreen(
                     errorPrezzo = prezzoVal == null || prezzoVal <= 0
 
                     if (!errorTitolo && !errorDescrizione && !errorPrezzo) {
-                        viewModel.createAnnuncio(
-                            titolo = titolo,
-                            descrizione = descrizione,
-                            prezzo = prezzoVal!!,
-                            categoria = categoriaSelezionata,
-                            condizioni = condizioniSelezionate,
-                            immagini = immaginiUri.map { it.toString() }
-                        )
+                        if (isEditMode && annuncioToEdit != null) {
+                            viewModel.updateAnnuncio(
+                                annuncioId = annuncioToEdit!!.id,
+                                titolo = titolo,
+                                descrizione = descrizione,
+                                prezzo = prezzoVal!!,
+                                categoria = categoriaSelezionata,
+                                condizioni = condizioniSelezionate,
+                                immagini = immaginiUri.map { it.toString() }
+                            )
+                        } else {
+                            viewModel.createAnnuncio(
+                                titolo = titolo,
+                                descrizione = descrizione,
+                                prezzo = prezzoVal!!,
+                                categoria = categoriaSelezionata,
+                                condizioni = condizioniSelezionate,
+                                immagini = immaginiUri.map { it.toString() }
+                            )
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
             ) {
-                Icon(Icons.Default.Add, contentDescription = null)
+                Icon(if (isEditMode) Icons.Default.Save else Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Crea Annuncio", fontWeight = FontWeight.Bold)
+                Text(if (isEditMode) "Salva modifiche" else "Crea Annuncio", fontWeight = FontWeight.Bold)
             }
         }
     }

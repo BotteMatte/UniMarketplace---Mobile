@@ -23,8 +23,8 @@ class AnnuncioDetailViewModel(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    val isOwnAnnuncio: StateFlow<Boolean> = _annuncio.map { 
-        it?.venditoreId == sessionManager.getUserId() 
+    val isOwnAnnuncio: StateFlow<Boolean> = _annuncio.map {
+        it?.venditoreId == sessionManager.getUserId()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val _isInCart = MutableStateFlow(false)
@@ -45,8 +45,7 @@ class AnnuncioDetailViewModel(
             try {
                 val annuncio = repository.getAnnuncioById(id)
                 _annuncio.value = annuncio
-                
-                // Controlla se è nel carrello e nei preferiti in una coroutine separata
+
                 val userId = sessionManager.getUserId()
                 if (userId != null && annuncio != null) {
                     launch {
@@ -71,7 +70,7 @@ class AnnuncioDetailViewModel(
     fun aggiungiAlCarrello() {
         val currentAnnuncio = _annuncio.value ?: return
         val userId = sessionManager.getUserId()
-        
+
         if (userId == null) {
             _errorMessage.value = "Devi effettuare il login per aggiungere al carrello"
             return
@@ -95,7 +94,7 @@ class AnnuncioDetailViewModel(
 
         viewModelScope.launch {
             carrelloRepository.rimuoviDalCarrello(userId, currentAnnuncio.id)
-            _isAddedToCart.value = false // Resetta lo stato di aggiunta
+            _isAddedToCart.value = false
         }
     }
 
@@ -118,6 +117,13 @@ class AnnuncioDetailViewModel(
         viewModelScope.launch {
             repository.updateAnnuncio(currentAnnuncio.copy(isVenduto = true))
             _annuncio.value = repository.getAnnuncioById(currentAnnuncio.id)
+        }
+    }
+
+    fun eliminaAnnuncio() {
+        val currentAnnuncio = _annuncio.value ?: return
+        viewModelScope.launch {
+            repository.deleteAnnuncio(currentAnnuncio)
         }
     }
 
