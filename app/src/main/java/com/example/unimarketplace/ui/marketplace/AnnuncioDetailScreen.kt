@@ -207,6 +207,7 @@ fun AnnuncioDetailScreen(
                         )
 
                         // Frecce per scorrere
+                        // commento
                         if (annuncio!!.immagini.size > 1) {
                             // Freccia sinistra
                             if (currentImageIndex > 0) {
