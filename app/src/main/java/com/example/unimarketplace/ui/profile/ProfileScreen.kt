@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,6 +43,62 @@ fun ProfileScreen(
     val userAnnunci by viewModel.userAnnunci.collectAsState()
     val userBadges by viewModel.userBadges.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val unreadCount by viewModel.unreadCount.collectAsState()
+    val notifications by viewModel.notifications.collectAsState()
+    var showNotifications by remember { mutableStateOf(false) }
+
+    // Dialog notifiche
+    if (showNotifications) {
+        AlertDialog(
+            onDismissRequest = { showNotifications = false },
+            title = { Text("Notifiche") },
+            text = {
+                if (notifications.isEmpty()) {
+                    Text("Nessuna notifica")
+                } else {
+                    LazyColumn {
+                        items(notifications.size) { index ->
+                            val n = notifications[index]
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Icon(
+                                    imageVector = when (n.type) {
+                                        "sale" -> Icons.Default.ShoppingCart
+                                        "badge" -> Icons.Default.Star
+                                        else -> Icons.Default.Notifications
+                                    },
+                                    contentDescription = null,
+                                    tint = if (n.isRead) Color.Gray else Color(0xFF2563EB),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(n.title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text(n.message, fontSize = 12.sp, color = Color.Gray)
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    TextButton(onClick = {
+                        viewModel.markAllNotificationsAsRead()
+                        showNotifications = false
+                    }) { Text("Segna tutte lette") }
+                    TextButton(onClick = { showNotifications = false }) { Text("Chiudi") }
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -49,6 +107,25 @@ fun ProfileScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    Box {
+                        IconButton(onClick = { showNotifications = true }) {
+                            Icon(Icons.Default.Notifications, contentDescription = "Notifiche")
+                        }
+                        if (unreadCount > 0) {
+                            Badge(
+                                modifier = Modifier.align(Alignment.TopEnd),
+                                containerColor = Color.Red,
+                                contentColor = Color.White
+                            ) {
+                                Text(
+                                    if (unreadCount > 99) "99+" else unreadCount.toString(),
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
                     }
                 }
             )
@@ -182,8 +259,7 @@ fun BadgesSection(badges: List<Badge>) {
             fontSize = 20.sp,
             modifier = Modifier.padding(vertical = 8.dp)
         )
-        
-        // Grid-like layout for badges
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -193,7 +269,6 @@ fun BadgesSection(badges: List<Badge>) {
             badges.forEach { badge ->
                 BadgeItem(badge, modifier = Modifier.weight(1f))
             }
-            // Fill with empty spaces if less than 3 badges to keep alignment (optional)
             if (badges.size < 3) {
                 repeat(3 - badges.size) {
                     Spacer(modifier = Modifier.weight(1f))
@@ -271,7 +346,7 @@ fun MyAnnuncioCard(
                         fontWeight = FontWeight.ExtraBold
                     )
                 }
-                
+
                 if (annuncio.isVenduto) {
                     Surface(
                         color = Color(0xFF10B981).copy(alpha = 0.1f),
@@ -289,7 +364,7 @@ fun MyAnnuncioCard(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)

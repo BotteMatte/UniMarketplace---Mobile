@@ -19,6 +19,7 @@ import com.example.unimarketplace.data.local.SessionManager
 import com.example.unimarketplace.data.local.UniMarketDatabase
 import com.example.unimarketplace.data.repository.*
 import com.example.unimarketplace.domain.model.BadgeType
+import com.example.unimarketplace.domain.repository.NotificationRepository
 import com.example.unimarketplace.ui.auth.AuthScreen
 import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
 import com.example.unimarketplace.ui.cart.CartScreen
@@ -71,6 +72,7 @@ fun AppNavigation(
     val carrelloRepository = CarrelloRepositoryImpl(uniDatabase.carrelloDao())
     val badgeRepository = BadgeRepositoryImpl(uniDatabase.badgeDao())
     val badgeManager = remember { BadgeManager(badgeRepository, annuncioRepository) }
+    val notificationRepository = remember { NotificationRepository(uniDatabase.notificationDao()) }
 
     // Popup per i badge guadagnati
     var showBadgeDialog by remember { mutableStateOf<BadgeType?>(null) }
@@ -151,7 +153,7 @@ fun AppNavigation(
 
         composable(Screen.Profile.route) {
             val profileViewModel: ProfileViewModel = viewModel(
-                factory = ProfileViewModelFactory(annuncioRepository, badgeRepository, badgeManager, sessionManager)
+                factory = ProfileViewModelFactory(annuncioRepository, badgeRepository, badgeManager, notificationRepository, sessionManager)
             )
             ProfileScreen(
                 viewModel = profileViewModel,
@@ -164,7 +166,7 @@ fun AppNavigation(
 
         composable(Screen.Cart.route) {
             val cartViewModel: CartViewModel = viewModel(
-                factory = CartViewModelFactory(carrelloRepository, annuncioRepository, badgeManager, sessionManager)
+                factory = CartViewModelFactory(carrelloRepository, annuncioRepository, badgeManager, notificationRepository, sessionManager)
             )
             CartScreen(
                 viewModel = cartViewModel,

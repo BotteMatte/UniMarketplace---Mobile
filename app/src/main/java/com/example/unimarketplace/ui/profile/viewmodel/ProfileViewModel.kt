@@ -3,10 +3,12 @@ package com.example.unimarketplace.ui.profile.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.unimarketplace.data.local.SessionManager
+import com.example.unimarketplace.data.local.entity.NotificationEntity
 import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.model.Badge
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
 import com.example.unimarketplace.domain.repository.BadgeRepository
+import com.example.unimarketplace.domain.repository.NotificationRepository
 import com.example.unimarketplace.util.BadgeManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -23,6 +25,7 @@ class ProfileViewModel(
     private val annuncioRepository: AnnuncioRepository,
     private val badgeRepository: BadgeRepository,
     private val badgeManager: BadgeManager,
+    private val notificationRepository: NotificationRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -34,6 +37,12 @@ class ProfileViewModel(
 
     private val _userBadges = MutableStateFlow<List<Badge>>(emptyList())
     val userBadges: StateFlow<List<Badge>> = _userBadges.asStateFlow()
+
+    private val _notifications = MutableStateFlow<List<NotificationEntity>>(emptyList())
+    val notifications: StateFlow<List<NotificationEntity>> = _notifications.asStateFlow()
+
+    private val _unreadCount = MutableStateFlow(0)
+    val unreadCount: StateFlow<Int> = _unreadCount.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -53,9 +62,21 @@ class ProfileViewModel(
                 }
             }
 
+            launch {
+                notificationRepository.getNotifications(userId).collectLatest { notif ->
+                    _notifications.value = notif
+                }
+            }
+
+            launch {
+                notificationRepository.getUnreadCount(userId).collectLatest { count ->
+                    _unreadCount.value = count
+                }
+            }
+
             annuncioRepository.getAnnunciByVenditore(userId).collectLatest { annunci ->
                 _userAnnunci.value = annunci
-                
+
                 val total = annunci.size
                 val sold = annunci.count { it.isVenduto }
                 val active = total - sold
@@ -75,11 +96,32 @@ class ProfileViewModel(
         }
     }
 
+    fun markAllNotificationsAsRead() {
+        val userId = sessionManager.getUserId() ?: return
+        viewModelScope.launch {
+            notificationRepository.markAllAsRead(userId)
+        }
+    }
+
+    fun deleteAllNotifications() {
+        val userId = sessionManager.getUserId() ?: return
+        viewModelScope.launch {
+            notificationRepository.deleteAll(userId)
+        }
+    }
+
     fun segnaComeVenduto(annuncio: Annuncio) {
         val userId = sessionManager.getUserId() ?: return
         viewModelScope.launch {
             annuncioRepository.updateAnnuncio(annuncio.copy(isVenduto = true))
             badgeManager.checkVendite(userId)
+            notificationRepository.addNotification(
+                userId = userId,
+                title = "Annuncio venduto!",
+                message = "Complimenti! Hai venduto '${annuncio.titolo}' a €${String.format("%.2f", annuncio.prezzo)}",
+                type = "sale",
+                relatedId = annuncio.id
+            )
         }
     }
 

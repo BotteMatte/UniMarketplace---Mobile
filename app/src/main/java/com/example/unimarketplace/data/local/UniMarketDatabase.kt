@@ -9,8 +9,15 @@ import com.example.unimarketplace.data.local.dao.*
 import com.example.unimarketplace.data.local.entity.*
 
 @Database(
-    entities = [UtenteEntity::class, AnnuncioEntity::class, PreferitiEntity::class, CarrelloEntity::class, BadgeEntity::class],
-    version = 5,
+    entities = [
+        UtenteEntity::class,
+        AnnuncioEntity::class,
+        PreferitiEntity::class,
+        CarrelloEntity::class,
+        BadgeEntity::class,
+        NotificationEntity::class
+    ],
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -21,6 +28,7 @@ abstract class UniMarketDatabase : RoomDatabase() {
     abstract fun preferitiDao(): PreferitiDao
     abstract fun carrelloDao(): CarrelloDao
     abstract fun badgeDao(): BadgeDao
+    abstract fun notificationDao(): NotificationDao
 
     companion object {
         @Volatile
