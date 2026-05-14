@@ -38,12 +38,10 @@ fun AuthScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Stati per i campi
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Osserva i risultati dell'autenticazione
     LaunchedEffect(viewModel.authResult) {
         viewModel.authResult.collect { result ->
             when (result) {
@@ -51,7 +49,6 @@ fun AuthScreen(
                     if (isLoginMode) {
                         onSuccess()
                     } else {
-                        // Mostra il messaggio di registrazione e passa al login
                         scope.launch { snackbarHostState.showSnackbar(result.message) }
                         delay(500)
                         isLoginMode = true
@@ -71,10 +68,11 @@ fun AuthScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF8FAFC)) // Slate 50
+                .background(Color(0xFFF8FAFC))
                 .verticalScroll(rememberScrollState())
+                .imePadding()  // <-- AGGIUNTO: spinge il contenuto sopra la tastiera
         ) {
-            // Top Bar: Torna al marketplace
+            // Top Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,30 +97,28 @@ fun AuthScreen(
 
             HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
 
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                AuthCard(
-                    isLoginMode = isLoginMode,
-                    fullName = fullName,
-                    email = email,
-                    password = password,
-                    onFullNameChange = { fullName = it },
-                    onEmailChange = { email = it },
-                    onPasswordChange = { password = it },
-                    onSwitchMode = { isLoginMode = !isLoginMode },
-                    onAction = {
-                        if (isLoginMode) {
-                            viewModel.login(email, password)
-                        } else {
-                            viewModel.register(fullName, email, password)
-                        }
+            Spacer(modifier = Modifier.height(24.dp))
+
+            AuthCard(
+                isLoginMode = isLoginMode,
+                fullName = fullName,
+                email = email,
+                password = password,
+                onFullNameChange = { fullName = it },
+                onEmailChange = { email = it },
+                onPasswordChange = { password = it },
+                onSwitchMode = { isLoginMode = !isLoginMode },
+                onAction = {
+                    if (isLoginMode) {
+                        viewModel.login(email, password)
+                    } else {
+                        viewModel.register(fullName, email, password)
                     }
-                )
-            }
+                }
+            )
+
+            // Spazio extra in fondo per evitare che il bottone venga tagliato
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -141,7 +137,7 @@ fun AuthCard(
 ) {
     Card(
         modifier = Modifier
-            .padding(20.dp)
+            .padding(horizontal = 20.dp)
             .fillMaxWidth()
             .widthIn(max = 450.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -166,10 +162,8 @@ fun AuthCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = if (isLoginMode)
-                    "Benvenuto! Inserisci le tue credenziali per accedere"
-                else
-                    "Crea il tuo account per iniziare a comprare e vendere",
+                text = if (isLoginMode) "Benvenuto! Inserisci le tue credenziali per accedere"
+                else "Crea il tuo account per iniziare a comprare e vendere",
                 fontSize = 16.sp,
                 color = Color(0xFF64748B),
                 textAlign = TextAlign.Center,
