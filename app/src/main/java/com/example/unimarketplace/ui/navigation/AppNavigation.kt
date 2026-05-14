@@ -1,8 +1,7 @@
 package com.example.unimarketplace.ui.navigation
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import android.app.Application
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
@@ -23,7 +22,15 @@ import com.example.unimarketplace.data.repository.PreferitiRepositoryImpl
 import com.example.unimarketplace.data.repository.UserRepositoryImpl
 import com.example.unimarketplace.ui.auth.AuthScreen
 import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
+import com.example.unimarketplace.ui.cart.CartScreen
+import com.example.unimarketplace.ui.cart.viewmodel.CartViewModel
+import com.example.unimarketplace.ui.cart.viewmodel.CartViewModelFactory
+import com.example.unimarketplace.ui.favorites.FavoritesScreen
+import com.example.unimarketplace.ui.favorites.viewmodel.FavoritesViewModel
+import com.example.unimarketplace.ui.favorites.viewmodel.FavoritesViewModelFactory
 import com.example.unimarketplace.ui.marketplace.AnnuncioDetailScreen
+import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModel
+import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModelFactory
 import com.example.unimarketplace.ui.marketplace.CreateAnnuncioScreen
 import com.example.unimarketplace.ui.marketplace.MarketplaceScreen
 import com.example.unimarketplace.ui.marketplace.viewmodel.CreateAnnuncioViewModel
@@ -33,19 +40,7 @@ import com.example.unimarketplace.ui.marketplace.viewmodel.MarketplaceViewModelF
 import com.example.unimarketplace.ui.profile.ProfileScreen
 import com.example.unimarketplace.ui.profile.viewmodel.ProfileViewModel
 import com.example.unimarketplace.ui.profile.viewmodel.ProfileViewModelFactory
-import com.example.unimarketplace.ui.cart.CartScreen
-import com.example.unimarketplace.ui.cart.viewmodel.CartViewModel
-import com.example.unimarketplace.ui.cart.viewmodel.CartViewModelFactory
-import com.example.unimarketplace.ui.favorites.FavoritesScreen
-import com.example.unimarketplace.ui.favorites.viewmodel.FavoritesViewModel
-import com.example.unimarketplace.ui.favorites.viewmodel.FavoritesViewModelFactory
-import android.app.Application
-import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModel
-import com.example.unimarketplace.ui.marketplace.AnnuncioDetailViewModelFactory
 
-/**
- * Screen: Definizione delle rotte dell'applicazione.
- */
 sealed class Screen(val route: String) {
     object Marketplace : Screen("marketplace")
     object Login : Screen("login")
@@ -54,6 +49,9 @@ sealed class Screen(val route: String) {
     object Cart : Screen("cart")
     object Favorites : Screen("favorites")
     object CreateAnnuncio : Screen("create_annuncio")
+    object EditAnnuncio : Screen("edit_annuncio/{annuncioId}") {
+        fun createRoute(annuncioId: Long) = "edit_annuncio/$annuncioId"
+    }
     object AnnuncioDetail : Screen("annuncio/{annuncioId}") {
         fun createRoute(annuncioId: Long) = "annuncio/$annuncioId"
     }
@@ -91,17 +89,17 @@ fun AppNavigation(
 
     val currentUser by authViewModel.currentUser.collectAsState()
 
+    // ViewModel condivisi
+    val marketplaceViewModel: MarketplaceViewModel = viewModel(
+        factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, carrelloRepository, sessionManager)
+    )
+
     NavHost(
         navController = navController,
         startDestination = Screen.Marketplace.route,
         modifier = modifier
     ) {
-        // Schermata Home (Marketplace)
-        // Schermata Home (Marketplace)
         composable(Screen.Marketplace.route) {
-            val marketplaceViewModel: MarketplaceViewModel = viewModel(
-                factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, carrelloRepository, sessionManager)
-            )
             MarketplaceScreen(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
@@ -120,7 +118,6 @@ fun AppNavigation(
             )
         }
 
-        // Schermata Profilo
         composable(Screen.Profile.route) {
             val profileViewModel: ProfileViewModel = viewModel(
                 factory = ProfileViewModelFactory(annuncioRepository, sessionManager)
@@ -132,7 +129,6 @@ fun AppNavigation(
             )
         }
 
-        // Schermata Carrello
         composable(Screen.Cart.route) {
             val cartViewModel: CartViewModel = viewModel(
                 factory = CartViewModelFactory(carrelloRepository, annuncioRepository, sessionManager)
@@ -145,7 +141,6 @@ fun AppNavigation(
             )
         }
 
-        // Schermata Preferiti
         composable(Screen.Favorites.route) {
             val favoritesViewModel: FavoritesViewModel = viewModel(
                 factory = FavoritesViewModelFactory(preferitiRepository, annuncioRepository, sessionManager)
@@ -161,7 +156,6 @@ fun AppNavigation(
             )
         }
 
-        // Schermata Login
         composable(Screen.Login.route) {
             AuthScreen(
                 viewModel = authViewModel,
@@ -173,7 +167,6 @@ fun AppNavigation(
             )
         }
 
-        // Schermata Registrazione
         composable(Screen.Register.route) {
             AuthScreen(
                 viewModel = authViewModel,
@@ -182,7 +175,6 @@ fun AppNavigation(
             )
         }
 
-        // Schermata Dettaglio Annuncio
         composable(
             Screen.AnnuncioDetail.route,
             arguments = listOf(navArgument("annuncioId") { type = NavType.LongType })
@@ -197,7 +189,42 @@ fun AppNavigation(
                 annuncioId = annuncioId,
                 viewModel = detailViewModel,
                 isDarkTheme = isDarkTheme,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToEdit = { id -> navController.navigate(Screen.EditAnnuncio.createRoute(id)) },
+                onAnnuncioDeleted = {
+                    marketplaceViewModel.refreshAnnunci()
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // Schermata Modifica Annuncio
+        composable(
+            Screen.EditAnnuncio.route,
+            arguments = listOf(navArgument("annuncioId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val annuncioId = backStackEntry.arguments?.getLong("annuncioId") ?: return@composable
+
+            val editViewModel: CreateAnnuncioViewModel = viewModel(
+                factory = CreateAnnuncioViewModelFactory(
+                    context.applicationContext as Application,
+                    annuncioRepository,
+                    sessionManager
+                )
+            )
+
+            LaunchedEffect(annuncioId) {
+                editViewModel.loadAnnuncioForEdit(annuncioId)
+            }
+
+            CreateAnnuncioScreen(
+                viewModel = editViewModel,
+                onBack = { navController.popBackStack() },
+                onSuccess = {
+                    marketplaceViewModel.refreshAnnunci()
+                    navController.popBackStack()
+                },
+                isEditMode = true
             )
         }
 
@@ -209,10 +236,6 @@ fun AppNavigation(
                     annuncioRepository,
                     sessionManager
                 )
-            )
-
-            val marketplaceViewModel: MarketplaceViewModel = viewModel(
-                factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, carrelloRepository, sessionManager)
             )
 
             CreateAnnuncioScreen(

@@ -41,7 +41,9 @@ fun AnnuncioDetailScreen(
     annuncioId: Long,
     viewModel: AnnuncioDetailViewModel,
     isDarkTheme: Boolean,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToEdit: (Long) -> Unit = {},
+    onAnnuncioDeleted: () -> Unit = {}
 ) {
     val annuncio by viewModel.annuncio.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -52,6 +54,9 @@ fun AnnuncioDetailScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+
+    // Stato per il dialog di conferma eliminazione
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(annuncioId) {
         viewModel.loadAnnuncio(annuncioId)
@@ -70,10 +75,37 @@ fun AnnuncioDetailScreen(
         }
     }
 
-    // Indice dell'immagine attualmente visualizzata
     var currentImageIndex by remember { mutableIntStateOf(0) }
-    // Stato per il fullscreen
     var fullScreenImage by remember { mutableStateOf(false) }
+
+    // Dialog di conferma eliminazione
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Elimina annuncio") },
+            text = { Text("Sei sicuro di voler eliminare questo annuncio? L'operazione è irreversibile.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.eliminaAnnuncio()
+                        showDeleteDialog = false
+                        onAnnuncioDeleted()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                ) {
+                    Text("Elimina")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Annulla")
+                }
+            },
+            icon = {
+                Icon(Icons.Default.Warning, contentDescription = null, tint = Color.Red)
+            }
+        )
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -120,12 +152,32 @@ fun AnnuncioDetailScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF10B981)
                                 )
+                                OutlinedButton(
+                                    onClick = { showDeleteDialog = true },
+                                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Elimina annuncio")
+                                }
                             } else {
                                 Text(
                                     "Questo è un tuo annuncio",
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Gray
                                 )
+                                // Pulsante Modifica
+                                Button(
+                                    onClick = { onNavigateToEdit(annuncio!!.id) },
+                                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
+                                ) {
+                                    Icon(Icons.Default.Edit, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Modifica annuncio")
+                                }
+                                // Pulsante Segna come venduto
                                 Button(
                                     onClick = { viewModel.segnaComeVenduto() },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -134,6 +186,16 @@ fun AnnuncioDetailScreen(
                                     Icon(Icons.Default.Check, contentDescription = null)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("Segna come venduto")
+                                }
+                                // Pulsante Elimina
+                                OutlinedButton(
+                                    onClick = { showDeleteDialog = true },
+                                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Elimina annuncio")
                                 }
                             }
                         }
@@ -153,7 +215,11 @@ fun AnnuncioDetailScreen(
                                 )
                             }
                         } else {
-                            Column(
+                            Button(
+                                onClick = {
+                                    if (isInCart) viewModel.rimuoviDalCarrello()
+                                    else viewModel.aggiungiAlCarrello()
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(16.dp),
@@ -233,7 +299,6 @@ fun AnnuncioDetailScreen(
                 // CAROSELLO IMMAGINI
                 if (annuncio!!.immagini.isNotEmpty()) {
                     Box(modifier = Modifier.fillMaxWidth().height(350.dp).clickable { fullScreenImage = true }) {
-                        // Immagine principale
                         AsyncImage(
                             model = annuncio!!.immagini[currentImageIndex],
                             contentDescription = "Immagine ${currentImageIndex + 1}",
@@ -241,10 +306,7 @@ fun AnnuncioDetailScreen(
                             contentScale = ContentScale.Fit
                         )
 
-                        // Frecce per scorrere
-                        // commento
                         if (annuncio!!.immagini.size > 1) {
-                            // Freccia sinistra
                             if (currentImageIndex > 0) {
                                 IconButton(
                                     onClick = { currentImageIndex-- },
@@ -254,15 +316,9 @@ fun AnnuncioDetailScreen(
                                         .size(40.dp)
                                         .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                                 ) {
-                                    Icon(
-                                        Icons.Default.KeyboardArrowLeft,
-                                        contentDescription = "Precedente",
-                                        tint = Color.White
-                                    )
+                                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Precedente", tint = Color.White)
                                 }
                             }
-
-                            // Freccia destra
                             if (currentImageIndex < annuncio!!.immagini.size - 1) {
                                 IconButton(
                                     onClick = { currentImageIndex++ },
@@ -272,21 +328,14 @@ fun AnnuncioDetailScreen(
                                         .size(40.dp)
                                         .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                                 ) {
-                                    Icon(
-                                        Icons.Default.KeyboardArrowRight,
-                                        contentDescription = "Successiva",
-                                        tint = Color.White
-                                    )
+                                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Successiva", tint = Color.White)
                                 }
                             }
                         }
 
-                        // Indicatore pagina (pallini)
                         if (annuncio!!.immagini.size > 1) {
                             Row(
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .padding(12.dp),
+                                modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 repeat(annuncio!!.immagini.size) { index ->
@@ -294,8 +343,7 @@ fun AnnuncioDetailScreen(
                                         modifier = Modifier
                                             .size(if (index == currentImageIndex) 10.dp else 8.dp)
                                             .background(
-                                                if (index == currentImageIndex) Color.White
-                                                else Color.White.copy(alpha = 0.5f),
+                                                if (index == currentImageIndex) Color.White else Color.White.copy(alpha = 0.5f),
                                                 CircleShape
                                             )
                                     )
@@ -303,7 +351,6 @@ fun AnnuncioDetailScreen(
                             }
                         }
 
-                        // Contatore immagini
                         if (annuncio!!.immagini.size > 1) {
                             Text(
                                 text = "${currentImageIndex + 1}/${annuncio!!.immagini.size}",
@@ -319,7 +366,6 @@ fun AnnuncioDetailScreen(
                         }
                     }
 
-                    // Miniature in basso (LazyRow orizzontale)
                     if (annuncio!!.immagini.size > 1) {
                         Spacer(modifier = Modifier.height(8.dp))
                         LazyRow(
@@ -333,17 +379,14 @@ fun AnnuncioDetailScreen(
                                         .size(60.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(
-                                            if (index == currentImageIndex) Color(0xFF2563EB)
-                                            else Color.Gray.copy(alpha = 0.3f)
+                                            if (index == currentImageIndex) Color(0xFF2563EB) else Color.Gray.copy(alpha = 0.3f)
                                         )
                                         .clickable { currentImageIndex = index }
                                 ) {
                                     AsyncImage(
                                         model = immagine,
                                         contentDescription = "Miniatura ${index + 1}",
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(if (index == currentImageIndex) 2.dp else 0.dp),
+                                        modifier = Modifier.fillMaxSize().padding(if (index == currentImageIndex) 2.dp else 0.dp),
                                         contentScale = ContentScale.Crop
                                     )
                                 }
@@ -351,20 +394,11 @@ fun AnnuncioDetailScreen(
                         }
                     }
                 } else {
-                    // Nessuna immagine
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(250.dp)
-                            .background(Color(0xFFE2E8F0)),
+                        modifier = Modifier.fillMaxWidth().height(250.dp).background(Color(0xFFE2E8F0)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            Icons.Default.Image,
-                            contentDescription = "Nessuna immagine",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(64.dp)
-                        )
+                        Icon(Icons.Default.Image, contentDescription = "Nessuna immagine", tint = Color.Gray, modifier = Modifier.size(64.dp))
                     }
                 }
 
@@ -372,75 +406,47 @@ fun AnnuncioDetailScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Titolo e Prezzo
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = annuncio!!.titolo,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 24.sp,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = "€${String.format("%.2f", annuncio!!.prezzo)}",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 24.sp,
-                            color = Color(0xFF2563EB)
-                        )
+                        Text(text = annuncio!!.titolo, fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.weight(1f))
+                        Text(text = "€${String.format("%.2f", annuncio!!.prezzo)}", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp, color = Color(0xFF2563EB))
                     }
 
-                    // Chip Categoria e Condizioni
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         AssistChip(
                             onClick = {},
                             label = { Text(annuncio!!.categoria.displayName) },
-                            leadingIcon = {
-                                Icon(Icons.Default.Category, contentDescription = null, modifier = Modifier.size(16.dp))
-                            }
+                            leadingIcon = { Icon(Icons.Default.Category, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         )
                         AssistChip(
                             onClick = {},
                             label = { Text(annuncio!!.condizioni.name) },
-                            leadingIcon = {
-                                Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(16.dp))
-                            }
+                            leadingIcon = { Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         )
                     }
 
                     HorizontalDivider()
 
-                    // Descrizione
                     Text("Descrizione", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text(
-                        text = annuncio!!.descrizione,
-                        fontSize = 16.sp,
-                        color = Color.Gray
-                    )
+                    Text(text = annuncio!!.descrizione, fontSize = 16.sp, color = Color.Gray)
 
                     HorizontalDivider()
 
-                    // Venditore
                     Text("Venditore", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = annuncio!!.venditoreNome,
-                            fontSize = 16.sp,
-                            color = Color.Gray
-                        )
+                        Text(text = annuncio!!.venditoreNome, fontSize = 16.sp, color = Color.Gray)
                     }
 
                     HorizontalDivider()
 
-                    // Posizione (se disponibile)
                     if (annuncio!!.latitudine != 0.0 && annuncio!!.longitudine != 0.0) {
                         Text("Posizione", fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
-                        // Informazioni indirizzo
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -467,26 +473,20 @@ fun AnnuncioDetailScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Mappa
                         val posizione = LatLng(annuncio!!.latitudine, annuncio!!.longitudine)
                         val cameraPositionState = rememberCameraPositionState {
                             position = CameraPosition.fromLatLngZoom(posizione, 15f)
                         }
 
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(250.dp),
+                            modifier = Modifier.fillMaxWidth().height(250.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             GoogleMap(
                                 modifier = Modifier.fillMaxSize(),
                                 cameraPositionState = cameraPositionState
                             ) {
-                                Marker(
-                                    state = MarkerState(position = posizione),
-                                    title = annuncio!!.titolo
-                                )
+                                Marker(state = MarkerState(position = posizione), title = annuncio!!.titolo)
                             }
                         }
                     }
@@ -503,6 +503,7 @@ fun AnnuncioDetailScreen(
             }
         }
     }
+
     // ==================== DIALOG FULLSCREEN IMMAGINE ====================
     if (fullScreenImage && annuncio != null && annuncio!!.immagini.isNotEmpty()) {
         val fullPagerState = rememberPagerState(
@@ -518,20 +519,9 @@ fun AnnuncioDetailScreen(
                 dismissOnClickOutside = true
             )
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black)
-            ) {
-                // Pager a schermo intero
-                HorizontalPager(
-                    state = fullPagerState,
-                    modifier = Modifier.fillMaxSize()
-                ) { page ->
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                HorizontalPager(state = fullPagerState, modifier = Modifier.fillMaxSize()) { page ->
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         AsyncImage(
                             model = annuncio!!.immagini[page],
                             contentDescription = null,
@@ -541,7 +531,6 @@ fun AnnuncioDetailScreen(
                     }
                 }
 
-                // Pulsante chiudi (X in alto a destra)
                 IconButton(
                     onClick = { fullScreenImage = false },
                     modifier = Modifier
@@ -550,19 +539,12 @@ fun AnnuncioDetailScreen(
                         .size(44.dp)
                         .background(Color.White.copy(alpha = 0.2f), CircleShape)
                 ) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = "Chiudi",
-                        tint = Color.White
-                    )
+                    Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = Color.White)
                 }
 
-                // Pallini indicatori in basso
                 if (annuncio!!.immagini.size > 1) {
                     Row(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 40.dp),
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         repeat(annuncio!!.immagini.size) { index ->
@@ -570,8 +552,7 @@ fun AnnuncioDetailScreen(
                                 modifier = Modifier
                                     .size(if (index == fullPagerState.currentPage) 10.dp else 7.dp)
                                     .background(
-                                        if (index == fullPagerState.currentPage) Color.White
-                                        else Color.White.copy(alpha = 0.4f),
+                                        if (index == fullPagerState.currentPage) Color.White else Color.White.copy(alpha = 0.4f),
                                         CircleShape
                                     )
                             )
@@ -579,11 +560,8 @@ fun AnnuncioDetailScreen(
                     }
                 }
 
-                // Contatore
                 Surface(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp),
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
                     shape = RoundedCornerShape(20.dp),
                     color = Color.White.copy(alpha = 0.2f)
                 ) {

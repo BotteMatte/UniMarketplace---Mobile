@@ -192,6 +192,7 @@ fun MarketplaceScreen(
                             )
 
                             // Barra di ricerca sempre visibile (compatta)
+                            // Barra di ricerca
                             OutlinedTextField(
                                 value = testoRicerca,
                                 onValueChange = {
@@ -201,19 +202,22 @@ fun MarketplaceScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp)
-                                    .padding(bottom = if (isScrolled) 8.dp else 12.dp)
-                                    .height(if (isScrolled) 48.dp else 56.dp),
-                                placeholder = { Text(
-                                    text = if (isScrolled) "Cerca..." else "Cerca libri, appunti, corsi...",
-                                    color = Color.Gray,
-                                    fontSize = if (isScrolled) 14.sp else 16.sp
-                                ) },
+                                    .padding(bottom = if (isScrolled) 4.dp else 12.dp)
+                                    .heightIn(min = 48.dp),
+                                placeholder = {
+                                    Text(
+                                        text = if (isScrolled && testoRicerca.isEmpty()) "Cerca..." else "Cerca libri, appunti, corsi...",
+                                        color = Color.Gray,
+                                        fontSize = 15.sp,
+                                        maxLines = 1
+                                    )
+                                },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Default.Search,
                                         contentDescription = null,
                                         tint = Color.Gray,
-                                        modifier = Modifier.size(if (isScrolled) 18.dp else 24.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 },
                                 trailingIcon = {
@@ -226,14 +230,14 @@ fun MarketplaceScreen(
                                                 Icons.Default.Close,
                                                 contentDescription = "Cancella",
                                                 tint = Color.Gray,
-                                                modifier = Modifier.size(if (isScrolled) 16.dp else 20.dp)
+                                                modifier = Modifier.size(18.dp)
                                             )
                                         }
                                     }
                                 },
                                 shape = RoundedCornerShape(12.dp),
                                 singleLine = true,
-                                textStyle = LocalTextStyle.current.copy(fontSize = if (isScrolled) 13.sp else 16.sp),
+                                textStyle = LocalTextStyle.current.copy(fontSize = 15.sp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
                                     focusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),

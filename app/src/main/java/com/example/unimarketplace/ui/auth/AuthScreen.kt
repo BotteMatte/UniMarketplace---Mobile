@@ -11,6 +11,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,12 +41,10 @@ fun AuthScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Stati per i campi
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Osserva i risultati dell'autenticazione
     LaunchedEffect(viewModel.authResult) {
         viewModel.authResult.collect { result ->
             when (result) {
@@ -51,7 +52,6 @@ fun AuthScreen(
                     if (isLoginMode) {
                         onSuccess()
                     } else {
-                        // Mostra il messaggio di registrazione e passa al login
                         scope.launch { snackbarHostState.showSnackbar(result.message) }
                         delay(500)
                         isLoginMode = true
@@ -71,10 +71,11 @@ fun AuthScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF8FAFC)) // Slate 50
+                .background(Color(0xFFF8FAFC))
                 .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
-            // Top Bar: Torna al marketplace
+            // Top Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,30 +100,27 @@ fun AuthScreen(
 
             HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
 
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                AuthCard(
-                    isLoginMode = isLoginMode,
-                    fullName = fullName,
-                    email = email,
-                    password = password,
-                    onFullNameChange = { fullName = it },
-                    onEmailChange = { email = it },
-                    onPasswordChange = { password = it },
-                    onSwitchMode = { isLoginMode = !isLoginMode },
-                    onAction = {
-                        if (isLoginMode) {
-                            viewModel.login(email, password)
-                        } else {
-                            viewModel.register(fullName, email, password)
-                        }
+            Spacer(modifier = Modifier.height(24.dp))
+
+            AuthCard(
+                isLoginMode = isLoginMode,
+                fullName = fullName,
+                email = email,
+                password = password,
+                onFullNameChange = { fullName = it },
+                onEmailChange = { email = it },
+                onPasswordChange = { password = it },
+                onSwitchMode = { isLoginMode = !isLoginMode },
+                onAction = {
+                    if (isLoginMode) {
+                        viewModel.login(email, password)
+                    } else {
+                        viewModel.register(fullName, email, password)
                     }
-                )
-            }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -141,7 +139,7 @@ fun AuthCard(
 ) {
     Card(
         modifier = Modifier
-            .padding(20.dp)
+            .padding(horizontal = 20.dp)
             .fillMaxWidth()
             .widthIn(max = 450.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -166,10 +164,8 @@ fun AuthCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = if (isLoginMode)
-                    "Benvenuto! Inserisci le tue credenziali per accedere"
-                else
-                    "Crea il tuo account per iniziare a comprare e vendere",
+                text = if (isLoginMode) "Benvenuto! Inserisci le tue credenziali per accedere"
+                else "Crea il tuo account per iniziare a comprare e vendere",
                 fontSize = 16.sp,
                 color = Color(0xFF64748B),
                 textAlign = TextAlign.Center,
@@ -200,13 +196,11 @@ fun AuthCard(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            AuthTextField(
+            // Password con toggle visibilità
+            PasswordTextField(
                 label = "Password",
                 value = password,
-                onValueChange = onPasswordChange,
-                icon = Icons.Default.Lock,
-                placeholder = "",
-                isPassword = true
+                onValueChange = onPasswordChange
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -251,6 +245,60 @@ fun AuthCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun PasswordTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF0F172A),
+            modifier = Modifier.padding(bottom = 10.dp, start = 2.dp)
+        )
+
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = Color(0xFF94A3B8),
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (passwordVisible) "Nascondi password" else "Mostra password",
+                        tint = Color(0xFF94A3B8),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = Color(0xFFF1F5F9),
+                focusedContainerColor = Color(0xFFF1F5F9),
+                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = Color(0xFFCBD5E1),
+                disabledBorderColor = Color.Transparent
+            ),
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            singleLine = true
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun AuthTextField(
     label: String,
     value: String,
@@ -289,7 +337,7 @@ fun AuthTextField(
                 focusedBorderColor = Color(0xFFCBD5E1),
                 disabledBorderColor = Color.Transparent
             ),
-            visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+            visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
             singleLine = true
         )
     }
