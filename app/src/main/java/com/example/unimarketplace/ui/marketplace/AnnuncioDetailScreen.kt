@@ -215,11 +215,7 @@ fun AnnuncioDetailScreen(
                                 )
                             }
                         } else {
-                            Button(
-                                onClick = {
-                                    if (isInCart) viewModel.rimuoviDalCarrello()
-                                    else viewModel.aggiungiAlCarrello()
-                                },
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(16.dp),
