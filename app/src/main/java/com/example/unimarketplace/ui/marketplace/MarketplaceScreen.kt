@@ -52,7 +52,8 @@ fun MarketplaceScreen(
     onNavigateToCart: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToCreateAnnuncio: () -> Unit,
-    onNavigateToDetail: (Long) -> Unit = {}
+    onNavigateToDetail: (Long) -> Unit = {},
+    onNavigateToSupport: () -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -118,7 +119,8 @@ fun MarketplaceScreen(
                             onNavigateToRegister = onNavigateToRegister,
                             onNavigateToProfile = onNavigateToProfile,
                             onNavigateToCart = onNavigateToCart,
-                            onNavigateToFavorites = onNavigateToFavorites
+                            onNavigateToFavorites = onNavigateToFavorites,
+                            onNavigateToSupport = onNavigateToSupport
                         )
                     }
                 }
@@ -190,7 +192,6 @@ fun MarketplaceScreen(
                                 )
                             )
 
-                            // Barra di ricerca sempre visibile (compatta)
                             // Barra di ricerca
                             OutlinedTextField(
                                 value = testoRicerca,
@@ -634,7 +635,8 @@ fun DrawerContent(
     onNavigateToRegister: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToCart: () -> Unit,
-    onNavigateToFavorites: () -> Unit
+    onNavigateToFavorites: () -> Unit,
+    onNavigateToSupport: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -789,7 +791,7 @@ fun DrawerContent(
 
             // Menu Items
             DrawerMenuItem(
-                icon = Icons.Outlined.FavoriteBorder, 
+                icon = Icons.Outlined.FavoriteBorder,
                 label = "Preferiti",
                 onClick = {
                     onNavigateToFavorites()
@@ -809,7 +811,14 @@ fun DrawerContent(
             HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0), thickness = 1.dp)
             Spacer(modifier = Modifier.height(16.dp))
 
-            DrawerMenuItem(icon = Icons.AutoMirrored.Outlined.HelpOutline, label = "Aiuto e Supporto")
+            DrawerMenuItem(
+                icon = Icons.AutoMirrored.Outlined.HelpOutline,
+                label = "Aiuto e Supporto",
+                onClick = {
+                    onNavigateToSupport()
+                    onClose()
+                }
+            )
 
             Spacer(modifier = Modifier.weight(1f))
 

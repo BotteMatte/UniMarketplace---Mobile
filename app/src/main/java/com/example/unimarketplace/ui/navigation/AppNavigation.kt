@@ -24,6 +24,7 @@ import com.example.unimarketplace.ui.auth.viewmodel.AuthViewModel
 import com.example.unimarketplace.ui.cart.CartScreen
 import com.example.unimarketplace.ui.cart.viewmodel.CartViewModel
 import com.example.unimarketplace.ui.cart.viewmodel.CartViewModelFactory
+import com.example.unimarketplace.ui.components.SupportScreen
 import com.example.unimarketplace.ui.favorites.FavoritesScreen
 import com.example.unimarketplace.ui.favorites.viewmodel.FavoritesViewModel
 import com.example.unimarketplace.ui.favorites.viewmodel.FavoritesViewModelFactory
@@ -51,6 +52,7 @@ sealed class Screen(val route: String) {
     object AnnuncioDetail : Screen("annuncio/{annuncioId}") {
         fun createRoute(annuncioId: Long) = "annuncio/$annuncioId"
     }
+    object Support : Screen("support")
 }
 
 @Composable
@@ -72,7 +74,7 @@ fun AppNavigation(
 
     // Popup per i badge guadagnati
     var showBadgeDialog by remember { mutableStateOf<BadgeType?>(null) }
-    
+
     LaunchedEffect(badgeManager) {
         badgeManager.newBadgeEarned.collect { badgeType ->
             showBadgeDialog = badgeType
@@ -142,7 +144,8 @@ fun AppNavigation(
                 onNavigateToCreateAnnuncio = { navController.navigate(Screen.CreateAnnuncio.route) },
                 onNavigateToDetail = { annuncioId ->
                     navController.navigate(Screen.AnnuncioDetail.createRoute(annuncioId))
-                }
+                },
+                onNavigateToSupport = { navController.navigate(Screen.Support.route) }
             )
         }
 
@@ -277,6 +280,14 @@ fun AppNavigation(
                     marketplaceViewModel.refreshAnnunci()
                     navController.popBackStack()
                 }
+            )
+        }
+
+        // Schermata Supporto
+        composable(Screen.Support.route) {
+            SupportScreen(
+                onBack = { navController.popBackStack() },
+                isDarkTheme = isDarkTheme
             )
         }
     }
