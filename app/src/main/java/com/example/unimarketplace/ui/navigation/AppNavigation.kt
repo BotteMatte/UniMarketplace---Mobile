@@ -125,6 +125,8 @@ fun AppNavigation(
             ProfileScreen(
                 viewModel = profileViewModel,
                 onBack = { navController.popBackStack() },
+                onNavigateToEdit = { id -> navController.navigate(Screen.EditAnnuncio.createRoute(id)) },
+                onNavigateToDetail = { id -> navController.navigate(Screen.AnnuncioDetail.createRoute(id)) },
                 userName = currentUser ?: ""
             )
         }

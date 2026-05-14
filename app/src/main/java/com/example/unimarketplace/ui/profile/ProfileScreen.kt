@@ -2,12 +2,18 @@ package com.example.unimarketplace.ui.profile
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.ui.profile.viewmodel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,15 +31,18 @@ import com.example.unimarketplace.ui.profile.viewmodel.ProfileViewModel
 fun ProfileScreen(
     viewModel: ProfileViewModel,
     onBack: () -> Unit,
+    onNavigateToEdit: (Long) -> Unit,
+    onNavigateToDetail: (Long) -> Unit,
     userName: String
 ) {
     val stats by viewModel.stats.collectAsState()
+    val userAnnunci by viewModel.userAnnunci.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profilo Utente", fontWeight = FontWeight.Bold) },
+                title = { Text("Il Mio Profilo", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -40,7 +50,7 @@ fun ProfileScreen(
                 }
             )
         }
-    ) { padding ->
+    ) { paddingValues ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -49,13 +59,23 @@ fun ProfileScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = padding.calculateTopPadding())
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(top = paddingValues.calculateTopPadding())
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(bottom = 24.dp)
             ) {
                 // User Info Section
                 item {
                     UserInfoSection(userName)
+                }
+
+                item {
+                    Text(
+                        text = "Le Tue Statistiche",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
                 }
 
                 // Stats Cards Section
@@ -67,7 +87,7 @@ fun ProfileScreen(
                     )
                 }
 
-                // Pie Chart Section
+                // Charts Section
                 if (stats.totalAds > 0) {
                     item {
                         Card(
@@ -92,7 +112,6 @@ fun ProfileScreen(
                     }
                 }
 
-                // Bar Chart Section
                 if (stats.adsByCategory.isNotEmpty()) {
                     item {
                         Card(
@@ -115,7 +134,150 @@ fun ProfileScreen(
                         }
                     }
                 }
+
+                item {
+                    Text(
+                        text = "I Miei Annunci",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                    )
+                }
+
+                if (userAnnunci.isEmpty()) {
+                    item {
+                        EmptyAdsPlaceholder()
+                    }
+                } else {
+                    items(userAnnunci) { annuncio ->
+                        MyAnnuncioCard(
+                            annuncio = annuncio,
+                            onEdit = { onNavigateToEdit(annuncio.id) },
+                            onDelete = { viewModel.eliminaAnnuncio(annuncio) },
+                            onMarkAsSold = { viewModel.segnaComeVenduto(annuncio) },
+                            onClick = { onNavigateToDetail(annuncio.id) }
+                        )
+                    }
+                }
             }
+        }
+    }
+}
+
+@Composable
+fun MyAnnuncioCard(
+    annuncio: Annuncio,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onMarkAsSold: () -> Unit,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = annuncio.titolo,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = "€${annuncio.prezzo.toInt()}",
+                        color = Color(0xFF2563EB),
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+                
+                if (annuncio.isVenduto) {
+                    Surface(
+                        color = Color(0xFF10B981).copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = "VENDUTO",
+                            color = Color(0xFF10B981),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (!annuncio.isVenduto) {
+                    OutlinedButton(
+                        onClick = onEdit,
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(0.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Modifica", fontSize = 12.sp)
+                    }
+
+                    Button(
+                        onClick = onMarkAsSold,
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(0.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Venduto", fontSize = 12.sp)
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = onDelete,
+                    modifier = if (annuncio.isVenduto) Modifier.fillMaxWidth() else Modifier.weight(1f),
+                    contentPadding = PaddingValues(0.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Elimina", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyAdsPlaceholder() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Gray.copy(alpha = 0.05f))
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(Icons.Default.Info, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(40.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Non hai ancora pubblicato nessun annuncio.", color = Color.Gray, fontSize = 14.sp)
         }
     }
 }
@@ -187,6 +349,7 @@ fun StatCard(modifier: Modifier = Modifier, label: String, value: String, color:
 @Composable
 fun AdsStatusPieChart(soldCount: Int, activeCount: Int) {
     val total = soldCount + activeCount
+    if (total == 0) return
     val soldAngle = (soldCount.toFloat() / total) * 360f
     val activeAngle = (activeCount.toFloat() / total) * 360f
 

@@ -10,6 +10,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -114,7 +117,7 @@ fun AnnuncioDetailScreen(
                 title = { Text("Dettaglio Annuncio", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
                     }
                 },
                 actions = {
@@ -312,7 +315,7 @@ fun AnnuncioDetailScreen(
                                         .size(40.dp)
                                         .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                                 ) {
-                                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Precedente", tint = Color.White)
+                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Precedente", tint = Color.White)
                                 }
                             }
                             if (currentImageIndex < annuncio!!.immagini.size - 1) {
@@ -324,7 +327,7 @@ fun AnnuncioDetailScreen(
                                         .size(40.dp)
                                         .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                                 ) {
-                                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Successiva", tint = Color.White)
+                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Successiva", tint = Color.White)
                                 }
                             }
                         }

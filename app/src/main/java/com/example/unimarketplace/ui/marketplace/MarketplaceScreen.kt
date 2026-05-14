@@ -1,6 +1,5 @@
 package com.example.unimarketplace.ui.marketplace
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

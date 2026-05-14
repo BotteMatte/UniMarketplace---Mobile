@@ -24,18 +24,23 @@ class ProfileViewModel(
     private val _stats = MutableStateFlow(ProfileStats())
     val stats: StateFlow<ProfileStats> = _stats.asStateFlow()
 
+    private val _userAnnunci = MutableStateFlow<List<Annuncio>>(emptyList())
+    val userAnnunci: StateFlow<List<Annuncio>> = _userAnnunci.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
-        loadStats()
+        loadData()
     }
 
-    private fun loadStats() {
+    private fun loadData() {
         val userId = sessionManager.getUserId() ?: return
         viewModelScope.launch {
             _isLoading.value = true
             annuncioRepository.getAnnunciByVenditore(userId).collectLatest { annunci ->
+                _userAnnunci.value = annunci
+                
                 val total = annunci.size
                 val sold = annunci.count { it.isVenduto }
                 val active = total - sold
@@ -52,6 +57,18 @@ class ProfileViewModel(
                 )
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun segnaComeVenduto(annuncio: Annuncio) {
+        viewModelScope.launch {
+            annuncioRepository.updateAnnuncio(annuncio.copy(isVenduto = true))
+        }
+    }
+
+    fun eliminaAnnuncio(annuncio: Annuncio) {
+        viewModelScope.launch {
+            annuncioRepository.deleteAnnuncio(annuncio)
         }
     }
 }

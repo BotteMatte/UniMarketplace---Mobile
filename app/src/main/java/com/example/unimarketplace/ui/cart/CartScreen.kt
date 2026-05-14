@@ -284,15 +284,15 @@ fun OrderSummaryCard(
             )
             Spacer(modifier = Modifier.height(24.dp))
 
-            SummaryRow(label = "Subtotale ($itemCount articolo${if (itemCount != 1) "li" else ""})", value = "€${"%.2f".format(subtotal)}", isDarkTheme = isDarkTheme)
+            SummaryRow(label = "Subtotale ($itemCount articolo${if (itemCount != 1) "li" else ""})", value = "€${"%.2f".format(subtotal)}")
             Spacer(modifier = Modifier.height(12.dp))
-            SummaryRow(label = "Spedizione", value = if (shipping == 0.0) "Gratuita" else "€${"%.2f".format(shipping)}", valueColor = Color(0xFF10B981), isDarkTheme = isDarkTheme)
+            SummaryRow(label = "Spedizione", value = if (shipping == 0.0) "Gratuita" else "€${"%.2f".format(shipping)}", valueColor = Color(0xFF10B981))
             
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFF1F5F9))
             Spacer(modifier = Modifier.height(16.dp))
 
-            SummaryRow(label = "Totale", value = "€${"%.2f".format(total)}", isTotal = true, isDarkTheme = isDarkTheme)
+            SummaryRow(label = "Totale", value = "€${"%.2f".format(total)}", isTotal = true)
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -327,7 +327,7 @@ fun OrderSummaryCard(
 }
 
 @Composable
-fun SummaryRow(label: String, value: String, valueColor: Color = Color.Unspecified, isTotal: Boolean = false, isDarkTheme: Boolean) {
+fun SummaryRow(label: String, value: String, valueColor: Color = Color.Unspecified, isTotal: Boolean = false) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
