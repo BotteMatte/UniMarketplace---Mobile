@@ -240,7 +240,7 @@ fun AnnuncioDetailScreen(
                                     modifier = Modifier.fillMaxWidth().height(56.dp),
                                     shape = RoundedCornerShape(12.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFEA4335), // Gmail Red
+                                        containerColor = Color(0xFF2563EB),
                                         contentColor = Color.White
                                     )
                                 ) {
