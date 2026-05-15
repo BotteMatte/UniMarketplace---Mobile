@@ -181,7 +181,7 @@ fun AuthCard(
                     value = fullName,
                     onValueChange = onFullNameChange,
                     icon = Icons.Default.Person,
-                    placeholder = ""
+                    placeholder = "es. Mario Rossi"
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -191,7 +191,7 @@ fun AuthCard(
                 value = email,
                 onValueChange = onEmailChange,
                 icon = Icons.Default.Email,
-                placeholder = ""
+                placeholder = "nome.cognome@gmail.it"
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -200,7 +200,8 @@ fun AuthCard(
             PasswordTextField(
                 label = "Password",
                 value = password,
-                onValueChange = onPasswordChange
+                onValueChange = onPasswordChange,
+                placeholder = "••••••••"
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -248,7 +249,8 @@ fun AuthCard(
 fun PasswordTextField(
     label: String,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    placeholder: String = ""
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -265,6 +267,7 @@ fun PasswordTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(placeholder, color = Color(0xFF94A3B8)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Lock,
@@ -320,7 +323,7 @@ fun AuthTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder) },
+            placeholder = { Text(placeholder, color = Color(0xFF94A3B8)) },
             leadingIcon = {
                 Icon(
                     imageVector = icon,
