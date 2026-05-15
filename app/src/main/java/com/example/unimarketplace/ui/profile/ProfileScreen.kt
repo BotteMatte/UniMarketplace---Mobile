@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.unimarketplace.domain.model.Annuncio
@@ -278,7 +279,7 @@ fun BadgesSection(badges: List<Badge>) {
 @Composable
 fun BadgeItem(badge: Badge, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier.height(80.dp),
+        modifier = modifier.height(90.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFD700).copy(alpha = 0.15f)),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD700))
@@ -286,7 +287,7 @@ fun BadgeItem(badge: Badge, modifier: Modifier = Modifier) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp),
+                .padding(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -294,15 +295,18 @@ fun BadgeItem(badge: Badge, modifier: Modifier = Modifier) {
                 imageVector = Icons.Default.Star,
                 contentDescription = null,
                 tint = Color(0xFFB8860B),
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = badge.type.titolo,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFB8860B),
-                maxLines = 1
+                textAlign = TextAlign.Center,
+                lineHeight = 14.sp,
+                maxLines = 2,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
