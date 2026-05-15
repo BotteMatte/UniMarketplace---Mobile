@@ -394,10 +394,18 @@ fun AnnuncioDetailScreen(
                     }
                 } else {
                     Box(
-                        modifier = Modifier.fillMaxWidth().height(250.dp).background(Color(0xFFE2E8F0)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp)
+                            .background(if (isDarkTheme) MaterialTheme.colorScheme.surfaceVariant else Color(0xFFE2E8F0)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Image, contentDescription = "Nessuna immagine", tint = Color.Gray, modifier = Modifier.size(64.dp))
+                        Icon(
+                            imageVector = Icons.Default.Image, 
+                            contentDescription = "Nessuna immagine", 
+                            tint = if (isDarkTheme) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray, 
+                            modifier = Modifier.size(64.dp)
+                        )
                     }
                 }
 
@@ -449,22 +457,32 @@ fun AnnuncioDetailScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC))
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isDarkTheme) MaterialTheme.colorScheme.surfaceVariant else Color(0xFFF8FAFC)
+                            )
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 if (annuncio!!.indirizzo.isNotEmpty()) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Gray)
+                                        Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isDarkTheme) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray)
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text(annuncio!!.indirizzo, fontSize = 14.sp)
+                                        Text(
+                                            annuncio!!.indirizzo, 
+                                            fontSize = 14.sp,
+                                            color = if (isDarkTheme) MaterialTheme.colorScheme.onSurfaceVariant else Color.Unspecified
+                                        )
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                 }
                                 if (annuncio!!.citta.isNotEmpty()) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.LocationCity, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Gray)
+                                        Icon(Icons.Default.LocationCity, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isDarkTheme) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray)
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text(annuncio!!.citta, fontSize = 14.sp)
+                                        Text(
+                                            annuncio!!.citta, 
+                                            fontSize = 14.sp,
+                                            color = if (isDarkTheme) MaterialTheme.colorScheme.onSurfaceVariant else Color.Unspecified
+                                        )
                                     }
                                 }
                             }

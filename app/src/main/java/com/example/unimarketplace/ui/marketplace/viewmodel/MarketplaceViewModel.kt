@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 
 class MarketplaceViewModel(
     private val repository: AnnuncioRepository,
@@ -19,6 +20,9 @@ class MarketplaceViewModel(
     private val carrelloRepository: CarrelloRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
+
+    private var preferitiJob: Job? = null
+    private var carrelloJob: Job? = null
 
     private val _allAnnunci = MutableStateFlow<List<Annuncio>>(emptyList())
 
@@ -63,7 +67,8 @@ class MarketplaceViewModel(
 
     private fun osservaPreferiti() {
         val utenteId = sessionManager.getUserId() ?: return
-        viewModelScope.launch {
+        preferitiJob?.cancel()
+        preferitiJob = viewModelScope.launch {
             preferitiRepository.getPreferitiByUtente(utenteId).collectLatest { ids ->
                 _preferitiIds.value = ids.toSet()
             }
@@ -72,7 +77,8 @@ class MarketplaceViewModel(
 
     private fun osservaCarrello() {
         val utenteId = sessionManager.getUserId() ?: return
-        viewModelScope.launch {
+        carrelloJob?.cancel()
+        carrelloJob = viewModelScope.launch {
             carrelloRepository.getCarrelloByUtente(utenteId).collectLatest { ids ->
                 _carrelloIds.value = ids.toSet()
             }
@@ -81,6 +87,12 @@ class MarketplaceViewModel(
 
     fun togglePreferito(annuncioId: Long) {
         val utenteId = sessionManager.getUserId() ?: return
+        
+        // Assicurati che l'osservazione sia attiva (specialmente se l'utente ha appena effettuato il login)
+        if (preferitiJob == null || !preferitiJob!!.isActive) {
+            osservaPreferiti()
+        }
+
         val annuncio = _allAnnunci.value.find { it.id == annuncioId }
         
         if (annuncio?.venditoreId == utenteId) {
@@ -97,14 +109,11 @@ class MarketplaceViewModel(
         _errorEvent.value = null
     }
 
-    // NUOVO: metodo pubblico per ricaricare (chiamato quando si torna alla home)
+    // NUOVO: metodo pubblico per ricaricare (chiamato quando si torna alla home o cambia l'utente)
     fun refreshAnnunci() {
-        viewModelScope.launch {
-            repository.getAllAnnunci().collect { lista ->
-                _allAnnunci.value = lista
-                applicaFiltri()
-            }
-        }
+        caricaAnnunci()
+        osservaPreferiti()
+        osservaCarrello()
     }
 
     fun setCategoria(categoria: String) {

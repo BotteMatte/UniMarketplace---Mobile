@@ -72,6 +72,10 @@ fun MarketplaceScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+    LaunchedEffect(userName) {
+        marketplaceViewModel.refreshAnnunci()
+    }
+
     LaunchedEffect(errorEvent) {
         errorEvent?.let {
             snackbarHostState.showSnackbar(it)
@@ -567,13 +571,16 @@ fun MarketplaceItemCard(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
-                        .background(Color.White.copy(alpha = 0.7f), CircleShape)
-                        .size(36.dp)
+                        .background(
+                            if (isDarkTheme) Color.Black.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.7f),
+                            CircleShape
+                        )
+                        .size(32.dp)
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Preferiti",
-                        tint = if (isFavorite) Color.Red else Color.DarkGray,
+                        tint = if (isFavorite) Color.Red else (if (isDarkTheme) Color.White else Color.DarkGray),
                         modifier = Modifier.size(20.dp)
                     )
                 }
