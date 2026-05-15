@@ -54,6 +54,7 @@ fun AuthScreen(
                     } else {
                         scope.launch { snackbarHostState.showSnackbar(result.message) }
                         delay(500)
+                        password = "" // Pulisci la password per il login
                         isLoginMode = true
                     }
                 }

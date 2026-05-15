@@ -206,7 +206,10 @@ fun AppNavigation(
             AuthScreen(
                 viewModel = authViewModel,
                 isLoginModeInitial = false,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onSuccess = {
+                    navController.popBackStack(Screen.Marketplace.route, false)
+                }
             )
         }
 
