@@ -250,6 +250,7 @@ fun ProfileScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BadgesSection(badges: List<Badge>) {
     Column {
@@ -260,19 +261,15 @@ fun BadgesSection(badges: List<Badge>) {
             modifier = Modifier.padding(vertical = 8.dp)
         )
 
-        Row(
+        FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             badges.forEach { badge ->
-                BadgeItem(badge, modifier = Modifier.weight(1f))
-            }
-            if (badges.size < 3) {
-                repeat(3 - badges.size) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
+                BadgeItem(badge, modifier = Modifier.width(105.dp))
             }
         }
     }
