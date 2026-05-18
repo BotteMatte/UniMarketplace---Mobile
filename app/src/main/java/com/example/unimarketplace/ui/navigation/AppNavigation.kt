@@ -71,7 +71,8 @@ fun AppNavigation(
     val preferitiRepository = PreferitiRepositoryImpl(uniDatabase.preferitiDao())
     val carrelloRepository = CarrelloRepositoryImpl(uniDatabase.carrelloDao())
     val badgeRepository = BadgeRepositoryImpl(uniDatabase.badgeDao())
-    val badgeManager = remember { BadgeManager(badgeRepository, annuncioRepository) }
+    val userRepository = remember { UserRepositoryImpl(database.userDao(), uniDatabase.utenteDao()) }
+    val badgeManager = remember { BadgeManager(badgeRepository, annuncioRepository, userRepository) }
     val notificationRepository = remember { NotificationRepository(uniDatabase.notificationDao()) }
 
     // Popup per i badge guadagnati
@@ -96,10 +97,19 @@ fun AppNavigation(
         )
     }
 
+    // Sincronizzazione utente all'avvio
+    LaunchedEffect(Unit) {
+        val userId = sessionManager.getUserId()
+        if (userId != null) {
+            userRepository.ensureUserExists(userId)
+        }
+    }
+
     // Check Animale Notturno
     LaunchedEffect(isDarkTheme) {
         val userId = sessionManager.getUserId()
         if (userId != null && isDarkTheme) {
+            userRepository.ensureUserExists(userId)
             badgeManager.checkAnimaleNotturno(userId, true)
         }
     }
@@ -123,7 +133,7 @@ fun AppNavigation(
 
     // ViewModel condivisi
     val marketplaceViewModel: MarketplaceViewModel = viewModel(
-        factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, carrelloRepository, sessionManager)
+        factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, carrelloRepository, userRepository, sessionManager)
     )
 
     NavHost(
@@ -220,7 +230,7 @@ fun AppNavigation(
             val annuncioId = backStackEntry.arguments?.getLong("annuncioId") ?: return@composable
 
             val detailViewModel: AnnuncioDetailViewModel = viewModel(
-                factory = AnnuncioDetailViewModelFactory(annuncioRepository, carrelloRepository, preferitiRepository, badgeManager, sessionManager)
+                factory = AnnuncioDetailViewModelFactory(annuncioRepository, carrelloRepository, preferitiRepository, userRepository, badgeManager, sessionManager)
             )
 
             AnnuncioDetailScreen(
@@ -247,6 +257,7 @@ fun AppNavigation(
                 factory = CreateAnnuncioViewModelFactory(
                     context.applicationContext as Application,
                     annuncioRepository,
+                    userRepository,
                     badgeManager,
                     sessionManager
                 )
@@ -273,6 +284,7 @@ fun AppNavigation(
                 factory = CreateAnnuncioViewModelFactory(
                     context.applicationContext as Application,
                     annuncioRepository,
+                    userRepository,
                     badgeManager,
                     sessionManager
                 )

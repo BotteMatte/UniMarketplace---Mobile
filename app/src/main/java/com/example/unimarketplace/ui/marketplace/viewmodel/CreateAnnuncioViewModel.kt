@@ -8,6 +8,7 @@ import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.model.Categoria
 import com.example.unimarketplace.domain.model.Condizioni
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
+import com.example.unimarketplace.domain.repository.UserRepository
 import com.example.unimarketplace.util.location.LocationHelper
 import com.example.unimarketplace.util.location.Posizione
 import com.example.unimarketplace.util.BadgeManager
@@ -21,6 +22,7 @@ import java.util.Date
 class CreateAnnuncioViewModel(
     application: Application,
     private val repository: AnnuncioRepository,
+    private val userRepository: UserRepository,
     private val badgeManager: BadgeManager,
     private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
@@ -126,6 +128,7 @@ class CreateAnnuncioViewModel(
 
         viewModelScope.launch {
             try {
+                userRepository.ensureUserExists(userId)
                 repository.insertAnnuncio(annuncio)
                 _createResult.emit(CreateResult.Success("Annuncio creato con successo!"))
                 
@@ -180,6 +183,7 @@ class CreateAnnuncioViewModel(
 
         viewModelScope.launch {
             try {
+                userRepository.ensureUserExists(userId)
                 repository.updateAnnuncio(annuncio)
                 _createResult.emit(CreateResult.Success("Annuncio aggiornato con successo!"))
             } catch (e: Exception) {

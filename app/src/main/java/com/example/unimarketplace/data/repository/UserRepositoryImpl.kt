@@ -42,4 +42,21 @@ class UserRepositoryImpl(
         userDao.insertUser(newUser)
         return true
     }
+
+    override suspend fun ensureUserExists(userId: Long) {
+        val utente = utenteDao.getUtenteById(userId)
+        if (utente == null) {
+            val user = userDao.getUserById(userId.toInt())
+            if (user != null) {
+                utenteDao.insertUtente(
+                    UtenteEntity(
+                        id = user.id.toLong(),
+                        nome = user.fullName,
+                        email = user.email,
+                        matricola = "N/A"
+                    )
+                )
+            }
+        }
+    }
 }

@@ -7,6 +7,7 @@ import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
 import com.example.unimarketplace.domain.repository.CarrelloRepository
 import com.example.unimarketplace.domain.repository.PreferitiRepository
+import com.example.unimarketplace.domain.repository.UserRepository
 import com.example.unimarketplace.util.BadgeManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -15,6 +16,7 @@ class AnnuncioDetailViewModel(
     private val repository: AnnuncioRepository,
     private val carrelloRepository: CarrelloRepository,
     private val preferitiRepository: PreferitiRepository,
+    private val userRepository: UserRepository,
     private val badgeManager: BadgeManager,
     private val sessionManager: SessionManager
 ) : ViewModel() {
@@ -89,7 +91,8 @@ class AnnuncioDetailViewModel(
         }
 
         viewModelScope.launch {
-            carrelloRepository.aggiungiAlCarrello(userId, currentAnnuncio.id)
+            userId?.let { userRepository.ensureUserExists(it) }
+            carrelloRepository.aggiungiAlCarrello(userId!!, currentAnnuncio.id)
             _isAddedToCart.value = true
             _errorMessage.value = null
         }
@@ -115,6 +118,7 @@ class AnnuncioDetailViewModel(
         }
 
         viewModelScope.launch {
+            userRepository.ensureUserExists(userId)
             preferitiRepository.togglePreferito(userId, currentAnnuncio.id)
         }
     }

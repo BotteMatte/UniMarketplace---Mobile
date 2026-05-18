@@ -1,21 +1,28 @@
 package com.example.unimarketplace.util
 
-import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.model.BadgeType
+import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
 import com.example.unimarketplace.domain.repository.BadgeRepository
+import com.example.unimarketplace.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 
 class BadgeManager(
     private val badgeRepository: BadgeRepository,
-    private val annuncioRepository: AnnuncioRepository
+    private val annuncioRepository: AnnuncioRepository,
+    private val userRepository: UserRepository
 ) {
     private val _newBadgeEarned = MutableSharedFlow<BadgeType>()
     val newBadgeEarned = _newBadgeEarned.asSharedFlow()
 
+    private suspend fun ensureUser(userId: Long) {
+        userRepository.ensureUserExists(userId)
+    }
+
     suspend fun checkNovizio(userId: Long) {
+        ensureUser(userId)
         val annunci = annuncioRepository.getAnnunciByVenditore(userId).first()
         if (annunci.isNotEmpty()) {
             if (badgeRepository.checkAndAwardBadge(userId, BadgeType.NOVIZIO)) {
@@ -25,6 +32,7 @@ class BadgeManager(
     }
 
     suspend fun checkFotografo(userId: Long, hasImage: Boolean) {
+        ensureUser(userId)
         if (hasImage) {
             if (badgeRepository.checkAndAwardBadge(userId, BadgeType.FOTOGRAFO)) {
                 _newBadgeEarned.emit(BadgeType.FOTOGRAFO)
@@ -33,6 +41,7 @@ class BadgeManager(
     }
 
     suspend fun checkAnimaleNotturno(userId: Long, isDarkMode: Boolean) {
+        ensureUser(userId)
         if (isDarkMode) {
             if (badgeRepository.checkAndAwardBadge(userId, BadgeType.ANIMALE_NOTTURNO)) {
                 _newBadgeEarned.emit(BadgeType.ANIMALE_NOTTURNO)
@@ -41,6 +50,7 @@ class BadgeManager(
     }
 
     suspend fun checkVendite(userId: Long) {
+        ensureUser(userId)
         val annunci = annuncioRepository.getAnnunciByVenditore(userId).first()
         val venduti = annunci.count { it.isVenduto }
 
@@ -59,6 +69,7 @@ class BadgeManager(
     }
 
     suspend fun checkAcquisti(userId: Long, allAnnunci: List<Annuncio>) {
+        ensureUser(userId)
         val acquisti = allAnnunci.count { it.compratoreId == userId }
 
         if (acquisti >= 1) {
@@ -71,6 +82,7 @@ class BadgeManager(
     }
 
     private suspend fun checkRabazziere(userId: Long) {
+        ensureUser(userId)
         val annunciVenditore = annuncioRepository.getAnnunciByVenditore(userId).first()
         val vendite = annunciVenditore.count { it.isVenduto }
         
@@ -85,6 +97,7 @@ class BadgeManager(
     }
 
     suspend fun checkDilettante(userId: Long) {
+        ensureUser(userId)
         val annunci = annuncioRepository.getAnnunciByVenditore(userId).first()
         if (annunci.size >= 2) {
             if (badgeRepository.checkAndAwardBadge(userId, BadgeType.DILETTANTE)) {

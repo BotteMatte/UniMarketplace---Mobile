@@ -6,6 +6,7 @@ import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.domain.repository.AnnuncioRepository
 import com.example.unimarketplace.domain.repository.CarrelloRepository
 import com.example.unimarketplace.domain.repository.PreferitiRepository
+import com.example.unimarketplace.domain.repository.UserRepository
 import com.example.unimarketplace.data.local.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +19,7 @@ class MarketplaceViewModel(
     private val repository: AnnuncioRepository,
     private val preferitiRepository: PreferitiRepository,
     private val carrelloRepository: CarrelloRepository,
+    private val userRepository: UserRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -101,6 +103,7 @@ class MarketplaceViewModel(
         }
 
         viewModelScope.launch {
+            userRepository.ensureUserExists(utenteId)
             preferitiRepository.togglePreferito(utenteId, annuncioId)
         }
     }
