@@ -58,7 +58,7 @@ fun AnnuncioDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
-    // Stato per il dialog di conferma eliminazione
+    // conferma eliminazione
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(annuncioId) {
@@ -81,7 +81,7 @@ fun AnnuncioDetailScreen(
     var currentImageIndex by remember { mutableIntStateOf(0) }
     var fullScreenImage by remember { mutableStateOf(false) }
 
-    // Dialog di conferma eliminazione
+    // alert di conferma eliminazione
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -170,7 +170,7 @@ fun AnnuncioDetailScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Gray
                                 )
-                                // Pulsante Modifica
+                                // pulsante modifica
                                 Button(
                                     onClick = { onNavigateToEdit(annuncio!!.id) },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -180,7 +180,7 @@ fun AnnuncioDetailScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("Modifica annuncio")
                                 }
-                                // Pulsante Segna come venduto
+                                // pulsante prenotazione venduto
                                 Button(
                                     onClick = { viewModel.segnaComeVenduto() },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -190,7 +190,7 @@ fun AnnuncioDetailScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("Segna come venduto")
                                 }
-                                // Pulsante Elimina
+                                // button elimina
                                 OutlinedButton(
                                     onClick = { showDeleteDialog = true },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -295,7 +295,7 @@ fun AnnuncioDetailScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                // CAROSELLO IMMAGINI
+
                 if (annuncio!!.immagini.isNotEmpty()) {
                     Box(modifier = Modifier.fillMaxWidth().height(350.dp).clickable { fullScreenImage = true }) {
                         AsyncImage(
@@ -521,7 +521,7 @@ fun AnnuncioDetailScreen(
         }
     }
 
-    // ==================== DIALOG FULLSCREEN IMMAGINE ====================
+
     if (fullScreenImage && annuncio != null && annuncio!!.immagini.isNotEmpty()) {
         val fullPagerState = rememberPagerState(
             initialPage = currentImageIndex,

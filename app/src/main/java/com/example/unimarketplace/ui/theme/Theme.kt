@@ -58,9 +58,9 @@ fun UniMarketplaceTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Invertiamo la logica per la visibilità delle icone:
-            // Se il tema è scuro, le icone devono essere chiare (isAppearanceLightStatusBars = false)
-            // Se il tema è chiaro, le icone devono essere scure (isAppearanceLightStatusBars = true)
+            // invertiamo la logica per la visibilità delle icone:
+            // se il tema è scuro, le icone devono essere chiare (isAppearanceLightStatusBars = false)
+            // se il tema è chiaro, le icone devono essere scure (isAppearanceLightStatusBars = true)
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

@@ -75,7 +75,7 @@ fun AppNavigation(
     val badgeManager = remember { BadgeManager(badgeRepository, annuncioRepository, userRepository) }
     val notificationRepository = remember { NotificationRepository(uniDatabase.notificationDao()) }
 
-    // Popup per i badge guadagnati
+    // popup per i badge guadagnati
     var showBadgeDialog by remember { mutableStateOf<BadgeType?>(null) }
 
     LaunchedEffect(badgeManager) {
@@ -97,7 +97,7 @@ fun AppNavigation(
         )
     }
 
-    // Sincronizzazione utente all'avvio
+    // sincronizzazione utente all'avvio
     LaunchedEffect(Unit) {
         val userId = sessionManager.getUserId()
         if (userId != null) {
@@ -105,7 +105,7 @@ fun AppNavigation(
         }
     }
 
-    // Check Animale Notturno
+    // check Animale Notturno
     LaunchedEffect(isDarkTheme) {
         val userId = sessionManager.getUserId()
         if (userId != null && isDarkTheme) {
@@ -131,7 +131,7 @@ fun AppNavigation(
 
     val currentUser by authViewModel.currentUser.collectAsState()
 
-    // ViewModel condivisi
+    // viewmodel condivisi
     val marketplaceViewModel: MarketplaceViewModel = viewModel(
         factory = MarketplaceViewModelFactory(annuncioRepository, preferitiRepository, carrelloRepository, userRepository, sessionManager)
     )
@@ -246,7 +246,7 @@ fun AppNavigation(
             )
         }
 
-        // Schermata Modifica Annuncio
+        // schermata modifica annuncio, riutilizza CreateAnnuncioScreen con modalità edit
         composable(
             Screen.EditAnnuncio.route,
             arguments = listOf(navArgument("annuncioId") { type = NavType.LongType })
@@ -278,7 +278,7 @@ fun AppNavigation(
             )
         }
 
-        // Schermata Crea Annuncio
+        // schernata creazione annuncio
         composable(Screen.CreateAnnuncio.route) {
             val createAnnuncioViewModel: CreateAnnuncioViewModel = viewModel(
                 factory = CreateAnnuncioViewModelFactory(
@@ -300,7 +300,7 @@ fun AppNavigation(
             )
         }
 
-        // Schermata Supporto
+        // schermata supporto
         composable(Screen.Support.route) {
             SupportScreen(
                 onBack = { navController.popBackStack() },

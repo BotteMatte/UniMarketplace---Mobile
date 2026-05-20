@@ -8,15 +8,15 @@ import com.example.unimarketplace.domain.usecase.GetAnnuncioByIdUseCase
 
 class UniMarketApp : Application() {
 
-    // Database
+    // db
     val database by lazy { UniMarketDatabase.getInstance(this) }
 
-    // Repositories
+    // repositories
     val annuncioRepository: AnnuncioRepository by lazy {
         AnnuncioRepositoryImpl(database.annuncioDao())
     }
 
-    // Use Cases
+    // casi d'uso
     val getAnnuncioByIdUseCase by lazy {
         GetAnnuncioByIdUseCase(annuncioRepository)
     }

@@ -125,7 +125,7 @@ fun NotificationCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.Top
         ) {
-            // Icona in base al tipo
+            // icon colorata in base al tipo di notifica
             Box(
                 modifier = Modifier
                     .size(44.dp)

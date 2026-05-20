@@ -75,13 +75,13 @@ class CartViewModel(
                 val acquirenteNome = sessionManager.getUserName() ?: "Utente"
 
                 currentItems.forEach { annuncio ->
-                    // Segna l'annuncio come venduto
+                    // segnala l'annuncio come venduto
                     annuncioRepository.updateAnnuncio(annuncio.copy(isVenduto = true, compratoreId = userId))
 
                     // Check badge per il venditore
                     badgeManager.checkVendite(annuncio.venditoreId)
 
-                    // Notifica al VENDITORE
+                    // codice per la notifica al venditore
                     notificationRepository.addNotification(
                         userId = annuncio.venditoreId,
                         title = "Annuncio acquistato! 🎉",
@@ -90,7 +90,7 @@ class CartViewModel(
                         relatedId = annuncio.id
                     )
 
-                    // Notifica al COMPRATORE
+                    // codice per la notifica al compratore
                     notificationRepository.addNotification(
                         userId = userId,
                         title = "Acquisto completato! ✅",
@@ -100,11 +100,11 @@ class CartViewModel(
                     )
                 }
 
-                // Check badge per il compratore
+                // check badge per il compratore
                 val updatedAllAnnunci = annuncioRepository.getAllAnnunci().first()
                 badgeManager.checkAcquisti(userId, updatedAllAnnunci)
 
-                // Svuota il carrello
+                // pulizia del carrello
                 carrelloRepository.svuotaCarrello(userId)
                 _checkoutSuccess.emit(true)
             } catch (e: Exception) {

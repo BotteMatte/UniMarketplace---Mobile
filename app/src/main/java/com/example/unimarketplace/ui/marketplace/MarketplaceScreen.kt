@@ -59,12 +59,12 @@ fun MarketplaceScreen(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    // Stati dai filtri del ViewModel
+    // stati dai filtri del ViewModel
     val categoriaSelezionata by marketplaceViewModel.categoriaSelezionata.collectAsState()
     val condizioniSelezionate by marketplaceViewModel.condizioniSelezionate.collectAsState()
     val prezzoMassimo by marketplaceViewModel.prezzoMassimo.collectAsState()
 
-    // Lista filtrata dal ViewModel
+    // lista filtrata dal ViewModel
     val annunci by marketplaceViewModel.annunciFiltrati.collectAsState()
     val preferitiIds by marketplaceViewModel.preferitiIds.collectAsState()
     val carrelloIds by marketplaceViewModel.carrelloIds.collectAsState()
@@ -83,14 +83,12 @@ fun MarketplaceScreen(
         }
     }
 
-    // Testo della barra di ricerca
+    // testo ricerca barra filtro
     var testoRicerca by remember { mutableStateOf("") }
 
-    // Stato per compattare i filtri durante lo scroll
     val isScrolled = listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 100
     val filtriCompatti by animateDpAsState(if (isScrolled) 0.dp else 1.dp, label = "filtri")
 
-    // Per far apparire il drawer a destra, forziamo RTL
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -130,7 +128,7 @@ fun MarketplaceScreen(
                 }
             }
         ) {
-            // Contenuto principale in LTR
+
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Scaffold(
                     modifier = modifier,
@@ -196,7 +194,7 @@ fun MarketplaceScreen(
                                 )
                             )
 
-                            // Barra di ricerca
+                            // barra di ricerca + filtri (compatti o espansi)
                             OutlinedTextField(
                                 value = testoRicerca,
                                 onValueChange = {
@@ -250,9 +248,9 @@ fun MarketplaceScreen(
                                 )
                             )
 
-                            // Filtri compatti o espansi
+
                             if (!isScrolled) {
-                                // FILTRI ESPANSI
+                                // espansione filtri (con card e slider)
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -296,7 +294,7 @@ fun MarketplaceScreen(
 
                                             Spacer(modifier = Modifier.width(8.dp))
 
-                                            // Condizioni
+                                            // condizioni
                                             var expandedCondizione by remember { mutableStateOf(false) }
                                             Box(modifier = Modifier.weight(1f)) {
                                                 FilterChipCompact(
@@ -324,7 +322,7 @@ fun MarketplaceScreen(
 
                                         Spacer(modifier = Modifier.height(8.dp))
 
-                                        // Prezzo slider
+                                        // slider prezzo
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             verticalAlignment = Alignment.CenterVertically
@@ -351,7 +349,7 @@ fun MarketplaceScreen(
                                     }
                                 }
                             } else {
-                                // FILTRI COMPATTI (solo chips orizzontali)
+
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -400,7 +398,7 @@ fun MarketplaceScreen(
                             .padding(padding)
                             .background(MaterialTheme.colorScheme.background)
                     ) {
-                        // Numero annunci trovati
+                        // numero annunci trovati
                         Text(
                             text = "${annunci.size} annunci trovati",
                             fontWeight = FontWeight.Medium,
@@ -409,7 +407,7 @@ fun MarketplaceScreen(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
 
-                        // Lista annunci
+                        // lista degli annunci
                         LazyColumn(
                             state = listState,
                             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -495,7 +493,7 @@ fun MarketplaceItemCard(
         )
     ) {
         Column {
-            // Immagine di copertina + Cuoricino
+            // img copertina + badge "Già nel carrello" + tasto preferiti
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -519,7 +517,7 @@ fun MarketplaceItemCard(
                     )
                 }
 
-                // Badge "Già nel carrello"
+                // badge già nel carrello o venduto
                 if (isInCart) {
                     Surface(
                         modifier = Modifier
@@ -565,7 +563,7 @@ fun MarketplaceItemCard(
                     }
                 }
 
-                // Tasto Preferiti in alto a destra
+                // tasto preferiti
                 IconButton(
                     onClick = { onToggleFavorite() },
                     modifier = Modifier
@@ -740,7 +738,7 @@ fun DrawerContent(
                     }
                 }
             } else {
-                // Auth Buttons
+                // bottone auth
                 Button(
                     onClick = {
                         onClose()
@@ -796,7 +794,6 @@ fun DrawerContent(
             HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0), thickness = 1.dp)
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Menu Items
             DrawerMenuItem(
                 icon = Icons.Outlined.FavoriteBorder,
                 label = "Preferiti",
@@ -829,7 +826,6 @@ fun DrawerContent(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Theme Toggle
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

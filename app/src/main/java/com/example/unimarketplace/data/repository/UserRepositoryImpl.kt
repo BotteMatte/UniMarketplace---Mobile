@@ -14,7 +14,7 @@ class UserRepositoryImpl(
     override suspend fun login(email: String, password: String): UserEntity? {
         val user = userDao.login(email, password)
         if (user != null) {
-            // Salva anche nella tabella utenti (per la foreign key degli annunci)
+
             val utenteEsistente = utenteDao.getUtenteById(user.id.toLong())
             if (utenteEsistente == null) {
                 utenteDao.insertUtente(

@@ -169,7 +169,7 @@ fun FavoriteItemCard(item: Annuncio, isDarkTheme: Boolean, onRemove: () -> Unit,
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Immagine dell'articolo
+            // immagine dell'articolo
             Box(
                 modifier = Modifier
                     .size(100.dp)

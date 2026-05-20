@@ -48,7 +48,7 @@ fun ProfileScreen(
     val notifications by viewModel.notifications.collectAsState()
     var showNotifications by remember { mutableStateOf(false) }
 
-    // Dialog notifiche
+    // dialog per notifiche
     if (showNotifications) {
         AlertDialog(
             onDismissRequest = { showNotifications = false },
@@ -165,7 +165,7 @@ fun ProfileScreen(
                     )
                 }
 
-                // Stats Cards Section
+                // statistiche principali
                 item {
                     StatsOverviewSection(
                         totalAds = stats.totalAds,
@@ -174,7 +174,7 @@ fun ProfileScreen(
                     )
                 }
 
-                // Charts Section
+                // selezione grafici solo se ci sono annunci
                 if (stats.totalAds > 0) {
                     item {
                         Card(

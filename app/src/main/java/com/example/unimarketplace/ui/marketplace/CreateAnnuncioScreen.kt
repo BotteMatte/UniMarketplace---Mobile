@@ -165,7 +165,7 @@ fun CreateAnnuncioScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Titolo
+            // titolo
             OutlinedTextField(
                 value = titolo,
                 onValueChange = {
@@ -179,7 +179,7 @@ fun CreateAnnuncioScreen(
                 supportingText = { if (errorTitolo) Text("Il titolo è obbligatorio") }
             )
 
-            // Descrizione
+            // descrizione
             OutlinedTextField(
                 value = descrizione,
                 onValueChange = {
@@ -194,7 +194,7 @@ fun CreateAnnuncioScreen(
                 supportingText = { if (errorDescrizione) Text("La descrizione è obbligatoria") }
             )
 
-            // Prezzo
+            // prezzo
             OutlinedTextField(
                 value = prezzo,
                 onValueChange = {
@@ -210,7 +210,7 @@ fun CreateAnnuncioScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
 
-            // Categoria
+            // categoria di appartenenza
             ExposedDropdownMenuBox(
                 expanded = expandedCategoria,
                 onExpandedChange = { expandedCategoria = !expandedCategoria }
@@ -240,7 +240,7 @@ fun CreateAnnuncioScreen(
                 }
             }
 
-            // Condizioni
+            // condizioni articolo
             ExposedDropdownMenuBox(
                 expanded = expandedCondizioni,
                 onExpandedChange = { expandedCondizioni = !expandedCondizioni }
@@ -270,7 +270,7 @@ fun CreateAnnuncioScreen(
                 }
             }
 
-            // Immagini
+            // img
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Immagini (facoltativo)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
@@ -334,7 +334,7 @@ fun CreateAnnuncioScreen(
                 }
             }
 
-            // Posizione
+            // posizione gps
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -449,7 +449,7 @@ fun CreateAnnuncioScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Bottone Crea / Salva modifiche
+            // button crea/ salva modifiche
             Button(
                 onClick = {
                     errorTitolo = titolo.isBlank()
@@ -492,7 +492,7 @@ fun CreateAnnuncioScreen(
     }
 }
 
-// Funzioni helper
+// funzionalità helper
 private fun createImageUri(context: Context): Uri {
     val dir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "UniMarket")
     if (!dir.exists()) dir.mkdirs()

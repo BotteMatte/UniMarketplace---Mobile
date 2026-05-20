@@ -14,7 +14,8 @@ data class Annuncio(
     val venditoreEmail: String = "",
     val isVenduto: Boolean = false,
     val compratoreId: Long? = null,
-    // Nuovi campi per la geolocalizzazione
+
+    // aggiunti campi per la geolocalizzazione
     val latitudine: Double = 0.0,
     val longitudine: Double = 0.0,
     val indirizzo: String = "",
