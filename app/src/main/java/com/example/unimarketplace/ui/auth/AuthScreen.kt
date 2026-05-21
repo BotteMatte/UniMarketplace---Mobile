@@ -72,7 +72,7 @@ fun AuthScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF8FAFC))
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .imePadding()
         ) {
@@ -88,18 +88,18 @@ fun AuthScreen(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
                     modifier = Modifier.size(20.dp),
-                    tint = Color(0xFF0F172A)
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "Torna al marketplace",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF0F172A)
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
-            HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -143,9 +143,9 @@ fun AuthCard(
             .padding(horizontal = 20.dp)
             .fillMaxWidth()
             .widthIn(max = 450.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(32.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
@@ -158,7 +158,7 @@ fun AuthCard(
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = Color(0xFF0F172A),
+                color = MaterialTheme.colorScheme.onSurface,
                 letterSpacing = (-0.5).sp
             )
 
@@ -168,7 +168,7 @@ fun AuthCard(
                 text = if (isLoginMode) "Benvenuto! Inserisci le tue credenziali per accedere"
                 else "Crea il tuo account per iniziare a comprare e vendere",
                 fontSize = 16.sp,
-                color = Color(0xFF64748B),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp),
                 lineHeight = 22.sp
@@ -213,11 +213,13 @@ fun AuthCard(
                     .fillMaxWidth()
                     .height(64.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF020617))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
                 Text(
                     text = if (isLoginMode) "Accedi" else "Registrati",
-                    color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -232,13 +234,13 @@ fun AuthCard(
                 Text(
                     text = if (isLoginMode) "Non hai un account? " else "Hai già un account? ",
                     fontSize = 16.sp,
-                    color = Color(0xFF475569)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = if (isLoginMode) "Registrati ora" else "Accedi",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2563EB)
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -260,7 +262,7 @@ fun PasswordTextField(
             text = label,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF0F172A),
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 10.dp, start = 2.dp)
         )
 
@@ -268,12 +270,12 @@ fun PasswordTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder, color = Color(0xFF94A3B8)) },
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = null,
-                    tint = Color(0xFF94A3B8),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
             },
@@ -282,17 +284,17 @@ fun PasswordTextField(
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                         contentDescription = if (passwordVisible) "Nascondi password" else "Mostra password",
-                        tint = Color(0xFF94A3B8),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(24.dp)
                     )
                 }
             },
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = Color(0xFFF1F5F9),
-                focusedContainerColor = Color(0xFFF1F5F9),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                 unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = Color(0xFFCBD5E1),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
                 disabledBorderColor = Color.Transparent
             ),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -316,7 +318,7 @@ fun AuthTextField(
             text = label,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF0F172A),
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 10.dp, start = 2.dp)
         )
 
@@ -324,21 +326,21 @@ fun AuthTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder, color = Color(0xFF94A3B8)) },
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
             leadingIcon = {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color(0xFF94A3B8),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
             },
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = Color(0xFFF1F5F9),
-                focusedContainerColor = Color(0xFFF1F5F9),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                 unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = Color(0xFFCBD5E1),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
                 disabledBorderColor = Color.Transparent
             ),
             visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
