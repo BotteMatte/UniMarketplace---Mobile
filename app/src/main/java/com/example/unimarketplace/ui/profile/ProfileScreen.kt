@@ -3,9 +3,11 @@ package com.example.unimarketplace.ui.profile
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -530,11 +532,19 @@ fun AdsStatusPieChart(soldCount: Int, activeCount: Int) {
 fun CategoryBarChart(data: Map<String, Int>) {
     val maxValue = data.values.maxOrNull() ?: 1
     val barColor = Color(0xFF6366F1)
+    val scrollState = rememberScrollState()
 
-    Column(modifier = Modifier.fillMaxWidth().height(200.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp)
+    ) {
         Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier
+                .fillMaxSize()
+                .horizontalScroll(scrollState)
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.Bottom
         ) {
             data.forEach { (category, count) ->
@@ -542,17 +552,31 @@ fun CategoryBarChart(data: Map<String, Int>) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Bottom,
-                    modifier = Modifier.fillMaxHeight()
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .widthIn(min = 45.dp)
                 ) {
-                    Text(text = count.toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = count.toString(),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     Box(
                         modifier = Modifier
-                            .width(30.dp)
-                            .fillMaxHeight(barHeightFraction * 0.8f)
-                            .background(barColor, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                            .width(32.dp)
+                            .fillMaxHeight(barHeightFraction * 0.75f)
+                            .background(barColor, RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = category, fontSize = 10.sp, color = Color.Gray)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = category,
+                        fontSize = 10.sp,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
                 }
             }
         }
