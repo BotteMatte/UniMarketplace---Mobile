@@ -273,7 +273,8 @@ fun AppNavigation(
                     marketplaceViewModel.refreshAnnunci()
                     navController.popBackStack()
                 },
-                isEditMode = true
+                isEditMode = true,
+                isDarkTheme = isDarkTheme
             )
         }
 
@@ -295,7 +296,8 @@ fun AppNavigation(
                 onSuccess = {
                     marketplaceViewModel.refreshAnnunci()
                     navController.popBackStack()
-                }
+                },
+                isDarkTheme = isDarkTheme
             )
         }
 

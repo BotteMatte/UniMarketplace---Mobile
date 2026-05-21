@@ -172,12 +172,15 @@ fun MarketplaceScreen(
                                         },
                                         modifier = Modifier
                                             .size(40.dp)
-                                            .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (isDarkTheme) Color.White else Color(0xFF0F172A),
+                                                RoundedCornerShape(8.dp)
+                                            )
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Add,
                                             contentDescription = "Add",
-                                            tint = Color.White
+                                            tint = if (isDarkTheme) Color(0xFF0F172A) else Color.White
                                         )
                                     }
                                     Spacer(modifier = Modifier.width(8.dp))

@@ -47,7 +47,8 @@ fun CreateAnnuncioScreen(
     viewModel: CreateAnnuncioViewModel,
     onBack: () -> Unit,
     onSuccess: () -> Unit,
-    isEditMode: Boolean = false
+    isEditMode: Boolean = false,
+    isDarkTheme: Boolean = false
 ) {
     val context = LocalContext.current
     val createResult by viewModel.createResult.collectAsState(initial = null)
@@ -482,7 +483,10 @@ fun CreateAnnuncioScreen(
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isDarkTheme) Color.White else Color(0xFF2563EB),
+                    contentColor = if (isDarkTheme) Color.Black else Color.White
+                )
             ) {
                 Icon(if (isEditMode) Icons.Default.Save else Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
