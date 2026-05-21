@@ -176,8 +176,7 @@ fun AppNavigation(
 
         composable(Screen.Cart.route) {
             val cartViewModel: CartViewModel = viewModel(
-                factory = CartViewModelFactory(carrelloRepository, annuncioRepository, badgeManager, notificationRepository, sessionManager)
-            )
+                factory = CartViewModelFactory(context.applicationContext as Application, carrelloRepository, annuncioRepository, badgeManager, notificationRepository, sessionManager)            )
             CartScreen(
                 viewModel = cartViewModel,
                 onNavigateBack = { navController.popBackStack() },

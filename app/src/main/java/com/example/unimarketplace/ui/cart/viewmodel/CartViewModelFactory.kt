@@ -1,5 +1,6 @@
 package com.example.unimarketplace.ui.cart.viewmodel
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.unimarketplace.data.local.SessionManager
@@ -9,6 +10,7 @@ import com.example.unimarketplace.domain.repository.NotificationRepository
 import com.example.unimarketplace.util.BadgeManager
 
 class CartViewModelFactory(
+    private val application: Application,
     private val carrelloRepository: CarrelloRepository,
     private val annuncioRepository: AnnuncioRepository,
     private val badgeManager: BadgeManager,
@@ -18,7 +20,7 @@ class CartViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(CartViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return CartViewModel(carrelloRepository, annuncioRepository, badgeManager, notificationRepository, sessionManager) as T
+            return CartViewModel(application, carrelloRepository, annuncioRepository, badgeManager, notificationRepository, sessionManager) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

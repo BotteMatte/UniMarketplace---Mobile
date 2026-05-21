@@ -1,6 +1,8 @@
 package com.example.unimarketplace.ui.cart.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.net.Uri
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.unimarketplace.data.local.SessionManager
 import com.example.unimarketplace.domain.model.Annuncio
@@ -8,16 +10,19 @@ import com.example.unimarketplace.domain.repository.AnnuncioRepository
 import com.example.unimarketplace.domain.repository.CarrelloRepository
 import com.example.unimarketplace.domain.repository.NotificationRepository
 import com.example.unimarketplace.util.BadgeManager
+import com.example.unimarketplace.util.ReceiptGenerator
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 
 class CartViewModel(
+    application: Application,
     private val carrelloRepository: CarrelloRepository,
     private val annuncioRepository: AnnuncioRepository,
     private val badgeManager: BadgeManager,
     private val notificationRepository: NotificationRepository,
     private val sessionManager: SessionManager
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _cartItems = MutableStateFlow<List<Annuncio>>(emptyList())
     val cartItems: StateFlow<List<Annuncio>> = _cartItems.asStateFlow()
@@ -25,7 +30,7 @@ class CartViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _checkoutSuccess = MutableSharedFlow<Boolean>()
+    private val _checkoutSuccess = MutableSharedFlow<CheckoutResult>()
     val checkoutSuccess = _checkoutSuccess.asSharedFlow()
 
     init {
@@ -73,15 +78,21 @@ class CartViewModel(
             _isLoading.value = true
             try {
                 val acquirenteNome = sessionManager.getUserName() ?: "Utente"
+                val acquirenteEmail = sessionManager.getUserEmail() ?: "N/D"
+                val receiptGenerator = ReceiptGenerator(getApplication())
+
+                // Lista degli item per la ricevuta
+                val receiptItems = mutableListOf<ReceiptGenerator.ReceiptItem>()
+                var totale = 0.0
 
                 currentItems.forEach { annuncio ->
-                    // segnala l'annuncio come venduto
+                    // Segna come venduto
                     annuncioRepository.updateAnnuncio(annuncio.copy(isVenduto = true, compratoreId = userId))
 
-                    // Check badge per il venditore
+                    // Badge venditore
                     badgeManager.checkVendite(annuncio.venditoreId)
 
-                    // codice per la notifica al venditore
+                    // Notifiche
                     notificationRepository.addNotification(
                         userId = annuncio.venditoreId,
                         title = "Annuncio acquistato! 🎉",
@@ -90,7 +101,6 @@ class CartViewModel(
                         relatedId = annuncio.id
                     )
 
-                    // codice per la notifica al compratore
                     notificationRepository.addNotification(
                         userId = userId,
                         title = "Acquisto completato! ✅",
@@ -98,20 +108,45 @@ class CartViewModel(
                         type = "cart",
                         relatedId = annuncio.id
                     )
+
+                    // Aggiungi al riepilogo
+                    receiptItems.add(
+                        ReceiptGenerator.ReceiptItem(
+                            annuncio = annuncio,
+                            venditoreNome = annuncio.venditoreNome
+                        )
+                    )
+                    totale += annuncio.prezzo
                 }
 
-                // check badge per il compratore
+                // genera ricevuta
+                val receiptUri = receiptGenerator.generateReceipt(
+                    ReceiptGenerator.ReceiptData(
+                        acquirenteNome = acquirenteNome,
+                        acquirenteEmail = acquirenteEmail,
+                        items = receiptItems,
+                        totale = totale
+                    )
+                )
+
+                // badge compratore
                 val updatedAllAnnunci = annuncioRepository.getAllAnnunci().first()
                 badgeManager.checkAcquisti(userId, updatedAllAnnunci)
 
-                // pulizia del carrello
+                // svuota carrello
                 carrelloRepository.svuotaCarrello(userId)
-                _checkoutSuccess.emit(true)
+
+                _checkoutSuccess.emit(CheckoutResult.Success(receiptUri))
             } catch (e: Exception) {
-                _checkoutSuccess.emit(false)
+                _checkoutSuccess.emit(CheckoutResult.Error(e.message ?: "Errore durante il pagamento"))
             } finally {
                 _isLoading.value = false
             }
         }
+    }
+
+    sealed class CheckoutResult {
+        data class Success(val receiptUri: Uri?) : CheckoutResult()
+        data class Error(val message: String) : CheckoutResult()
     }
 }

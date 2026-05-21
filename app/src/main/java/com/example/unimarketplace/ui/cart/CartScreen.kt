@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.unimarketplace.domain.model.Annuncio
 import com.example.unimarketplace.ui.cart.viewmodel.CartViewModel
-
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
@@ -35,30 +37,78 @@ fun CartScreen(
 
     var showSuccessDialog by remember { mutableStateOf(false) }
 
+    var checkoutResult by remember { mutableStateOf<CartViewModel.CheckoutResult?>(null) }
+
     LaunchedEffect(Unit) {
-        viewModel.checkoutSuccess.collect { success ->
-            if (success) {
-                showSuccessDialog = true
-            }
+        viewModel.checkoutSuccess.collect { result ->
+            checkoutResult = result
+            showSuccessDialog = true
         }
     }
 
-    if (showSuccessDialog) {
+    if (showSuccessDialog && checkoutResult != null) {
+        val context = LocalContext.current
+
         AlertDialog(
             onDismissRequest = {
                 showSuccessDialog = false
-                onContinueShopping() // Torna al marketplace dopo l'acquisto
+                onContinueShopping()
             },
-            title = { Text("Acquisto effettuato") },
-            text = { Text("Il tuo ordine è stato elaborato con successo. Grazie per il tuo acquisto!") },
+            title = { Text("Acquisto effettuato! 🎉") },
+            text = {
+                Column {
+                    when (val result = checkoutResult) {
+                        is CartViewModel.CheckoutResult.Success -> {
+                            Text("Il tuo ordine è stato elaborato con successo.")
+                            Text("Ricevuta salvata in Download.", color = Color.Gray, fontSize = 14.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Cosa vuoi fare con la ricevuta?", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
+                        is CartViewModel.CheckoutResult.Error -> {
+                            Text("Errore: ${result.message}", color = Color.Red)
+                        }
+                        null -> {}
+                    }
+                }
+            },
             confirmButton = {
-                Button(
-                    onClick = {
+                val result = checkoutResult
+                if (result is CartViewModel.CheckoutResult.Success && result.receiptUri != null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        // Pulsante per visualizzare la ricevuta
+                        TextButton(onClick = {
+                            try {
+                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                                    setDataAndType(result.receiptUri, "application/pdf")
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            showSuccessDialog = false
+                            onContinueShopping()
+                        }) {
+                            Text("Visualizza PDF")
+                        }
+                        // Pulsante OK
+                        TextButton(onClick = {
+                            showSuccessDialog = false
+                            onContinueShopping()
+                        }) {
+                            Text("OK")
+                        }
+                    }
+                } else {
+                    TextButton(onClick = {
                         showSuccessDialog = false
                         onContinueShopping()
+                    }) {
+                        Text("OK")
                     }
-                ) {
-                    Text("OK")
                 }
             }
         )
