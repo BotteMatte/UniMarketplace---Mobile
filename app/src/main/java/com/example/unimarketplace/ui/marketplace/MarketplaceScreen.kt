@@ -85,6 +85,7 @@ fun MarketplaceScreen(
 
     // testo ricerca barra filtro
     var testoRicerca by remember { mutableStateOf("") }
+    var filtriVisibili by remember { mutableStateOf(false) }
 
     val isScrolled = listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 100
     val filtriCompatti by animateDpAsState(if (isScrolled) 0.dp else 1.dp, label = "filtri")
@@ -198,61 +199,85 @@ fun MarketplaceScreen(
                             )
 
                             // barra di ricerca + filtri (compatti o espansi)
-                            OutlinedTextField(
-                                value = testoRicerca,
-                                onValueChange = {
-                                    testoRicerca = it
-                                    marketplaceViewModel.setQueryRicerca(it)
-                                },
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp)
-                                    .padding(bottom = if (isScrolled) 4.dp else 12.dp)
-                                    .heightIn(min = 48.dp),
-                                placeholder = {
-                                    Text(
-                                        text = if (isScrolled && testoRicerca.isEmpty()) "Cerca..." else "Cerca libri, appunti, corsi...",
-                                        color = Color.Gray,
-                                        fontSize = 15.sp,
-                                        maxLines = 1
-                                    )
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.Search,
-                                        contentDescription = null,
-                                        tint = Color.Gray,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                },
-                                trailingIcon = {
-                                    if (testoRicerca.isNotEmpty()) {
-                                        IconButton(onClick = {
-                                            testoRicerca = ""
-                                            marketplaceViewModel.setQueryRicerca("")
-                                        }) {
-                                            Icon(
-                                                Icons.Default.Close,
-                                                contentDescription = "Cancella",
-                                                tint = Color.Gray,
-                                                modifier = Modifier.size(18.dp)
-                                            )
+                                    .padding(bottom = if (isScrolled) 4.dp else 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedTextField(
+                                    value = testoRicerca,
+                                    onValueChange = {
+                                        testoRicerca = it
+                                        marketplaceViewModel.setQueryRicerca(it)
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .heightIn(min = 48.dp),
+                                    placeholder = {
+                                        Text(
+                                            text = if (isScrolled && testoRicerca.isEmpty()) "Cerca..." else "Cerca libri, appunti...",
+                                            color = Color.Gray,
+                                            fontSize = 15.sp,
+                                            maxLines = 1
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Search,
+                                            contentDescription = null,
+                                            tint = Color.Gray,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        if (testoRicerca.isNotEmpty()) {
+                                            IconButton(onClick = {
+                                                testoRicerca = ""
+                                                marketplaceViewModel.setQueryRicerca("")
+                                            }) {
+                                                Icon(
+                                                    Icons.Default.Close,
+                                                    contentDescription = "Cancella",
+                                                    tint = Color.Gray,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
                                         }
-                                    }
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                singleLine = true,
-                                textStyle = LocalTextStyle.current.copy(fontSize = 15.sp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    unfocusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
-                                    focusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
-                                    unfocusedBorderColor = Color.Transparent,
-                                    focusedBorderColor = Color(0xFFCBD5E1)
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    singleLine = true,
+                                    textStyle = LocalTextStyle.current.copy(fontSize = 15.sp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
+                                        focusedContainerColor = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedBorderColor = Color(0xFFCBD5E1)
+                                    )
                                 )
-                            )
 
+                                Spacer(modifier = Modifier.width(8.dp))
 
-                            if (!isScrolled) {
+                                IconButton(
+                                    onClick = { filtriVisibili = !filtriVisibili },
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(
+                                            if (filtriVisibili) Color(0xFF2563EB) 
+                                            else (if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9)),
+                                            RoundedCornerShape(12.dp)
+                                        )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FilterList,
+                                        contentDescription = "Filtri",
+                                        tint = if (filtriVisibili) Color.White else Color.Gray
+                                    )
+                                }
+                            }
+
+                            if (filtriVisibili) {
                                 // espansione filtri (con card e slider)
                                 Card(
                                     modifier = Modifier
@@ -351,8 +376,9 @@ fun MarketplaceScreen(
                                         }
                                     }
                                 }
-                            } else {
+                            }
 
+                            if (isScrolled) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
