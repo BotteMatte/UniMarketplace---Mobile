@@ -66,6 +66,8 @@ fun CreateAnnuncioScreen(
     var categoriaSelezionata by remember { mutableStateOf(Categoria.ALTRO) }
     var condizioniSelezionate by remember { mutableStateOf(Condizioni.USATO) }
     var immaginiUri by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var pdfUri by remember { mutableStateOf<Uri?>(null) }
+    var pdfName by remember { mutableStateOf<String?>(null) }
 
     var errorTitolo by remember { mutableStateOf(false) }
     var errorDescrizione by remember { mutableStateOf(false) }
@@ -85,6 +87,10 @@ fun CreateAnnuncioScreen(
             categoriaSelezionata = it.categoria
             condizioniSelezionate = it.condizioni
             immaginiUri = it.immagini.map { uri -> Uri.parse(uri) }
+            it.pdfUri?.let { uriString ->
+                pdfUri = Uri.parse(uriString)
+                pdfName = pdfUri?.lastPathSegment
+            }
         }
     }
 
@@ -112,6 +118,18 @@ fun CreateAnnuncioScreen(
         if (success) {
             currentPhotoUri?.let { uri ->
                 immaginiUri = immaginiUri + uri
+            }
+        }
+    }
+
+    val pdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            val savedUri = saveFileToInternalStorage(context, it, "pdf")
+            if (savedUri != null) {
+                pdfUri = savedUri
+                pdfName = it.lastPathSegment ?: "documento.pdf"
             }
         }
     }
@@ -267,6 +285,64 @@ fun CreateAnnuncioScreen(
                                 expandedCondizioni = false
                             }
                         )
+                    }
+                }
+            }
+
+            // Sezione PDF
+            if (categoriaSelezionata == Categoria.PDF_DOCUMENTI ||
+                categoriaSelezionata == Categoria.ESERCITAZIONI_TEST ||
+                categoriaSelezionata == Categoria.DISPENSE
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, tint = Color.Red)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Allegato PDF", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        if (pdfUri != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color.Gray.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                                    .padding(8.dp)
+                            ) {
+                                Icon(Icons.Default.Description, contentDescription = null, tint = Color.Gray)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = pdfName ?: "documento.pdf",
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 1,
+                                    fontSize = 14.sp
+                                )
+                                IconButton(onClick = { 
+                                    pdfUri = null
+                                    pdfName = null
+                                }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Rimuovi", tint = Color.Red)
+                                }
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { pdfLauncher.launch("application/pdf") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.UploadFile, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Carica PDF")
+                            }
+                        }
                     }
                 }
             }
@@ -467,7 +543,8 @@ fun CreateAnnuncioScreen(
                                 prezzo = prezzoVal!!,
                                 categoria = categoriaSelezionata,
                                 condizioni = condizioniSelezionate,
-                                immagini = immaginiUri.map { it.toString() }
+                                immagini = immaginiUri.map { it.toString() },
+                                pdfUri = pdfUri?.toString()
                             )
                         } else {
                             viewModel.createAnnuncio(
@@ -476,7 +553,8 @@ fun CreateAnnuncioScreen(
                                 prezzo = prezzoVal!!,
                                 categoria = categoriaSelezionata,
                                 condizioni = condizioniSelezionate,
-                                immagini = immaginiUri.map { it.toString() }
+                                immagini = immaginiUri.map { it.toString() },
+                                pdfUri = pdfUri?.toString()
                             )
                         }
                     }
@@ -505,11 +583,16 @@ private fun createImageUri(context: Context): Uri {
 }
 
 private fun saveImageToInternalStorage(context: Context, uri: Uri): Uri? {
+    return saveFileToInternalStorage(context, uri, "images")
+}
+
+private fun saveFileToInternalStorage(context: Context, uri: Uri, subDir: String): Uri? {
     return try {
         val inputStream = context.contentResolver.openInputStream(uri) ?: return null
-        val dir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "UniMarket")
+        val dir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "UniMarket/$subDir")
         if (!dir.exists()) dir.mkdirs()
-        val file = File(dir, "IMG_${UUID.randomUUID()}.jpg")
+        val extension = if (subDir == "pdf") "pdf" else "jpg"
+        val file = File(dir, "FILE_${UUID.randomUUID()}.$extension")
         FileOutputStream(file).use { outputStream -> inputStream.copyTo(outputStream) }
         inputStream.close()
         Uri.fromFile(file)

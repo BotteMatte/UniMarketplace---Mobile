@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.unimarketplace.domain.model.Annuncio
+import com.example.unimarketplace.domain.model.Categoria
+import com.example.unimarketplace.util.FileHelper
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
@@ -37,6 +39,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +59,7 @@ fun AnnuncioDetailScreen(
     val isOwnAnnuncio by viewModel.isOwnAnnuncio.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     // conferma eliminazione
@@ -433,6 +437,55 @@ fun AnnuncioDetailScreen(
                             label = { Text(annuncio!!.condizioni.name) },
                             leadingIcon = { Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         )
+                    }
+
+                    if (annuncio!!.pdfUri != null) {
+                        Surface(
+                            color = Color.Red.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.PictureAsPdf, contentDescription = null, tint = Color.Red)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text("Documento Digitale incluso", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("Potrai scaricare il PDF dopo l'acquisto", fontSize = 12.sp, color = Color.Gray)
+                                }
+                            }
+                        }
+
+                        // Pulsante di download se acquistato
+                        val userId = viewModel.sessionManager.getUserId()
+                        if (annuncio!!.isVenduto && annuncio!!.compratoreId == userId) {
+                            Button(
+                                onClick = {
+                                    val success = FileHelper.downloadPdfToPublicFolder(
+                                        context,
+                                        annuncio!!.pdfUri!!,
+                                        "${annuncio!!.titolo}.pdf"
+                                    )
+                                    if (success) {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("PDF scaricato nella cartella Download")
+                                        }
+                                    } else {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Errore durante il download del PDF")
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                            ) {
+                                Icon(Icons.Default.Download, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Scarica PDF Acquistato")
+                            }
+                        }
                     }
 
                     HorizontalDivider()

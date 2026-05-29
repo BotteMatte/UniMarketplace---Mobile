@@ -83,7 +83,8 @@ class CreateAnnuncioViewModel(
         prezzo: Double,
         categoria: Categoria,
         condizioni: Condizioni,
-        immagini: List<String>
+        immagini: List<String>,
+        pdfUri: String? = null
     ) {
         val userId = sessionManager.getUserId()
         val userName = sessionManager.getUserName()
@@ -118,6 +119,7 @@ class CreateAnnuncioViewModel(
             venditoreNome = userName,
             venditoreEmail = userEmail,
             isVenduto = false,
+            pdfUri = pdfUri,
             latitudine = posizioneAttuale?.latitudine ?: 0.0,
             longitudine = posizioneAttuale?.longitudine ?: 0.0,
             indirizzo = posizioneAttuale?.indirizzo ?: "",
@@ -151,7 +153,8 @@ class CreateAnnuncioViewModel(
         prezzo: Double,
         categoria: Categoria,
         condizioni: Condizioni,
-        immagini: List<String>
+        immagini: List<String>,
+        pdfUri: String? = null
     ) {
         val userId = sessionManager.getUserId()
         val userName = sessionManager.getUserName()
@@ -173,6 +176,7 @@ class CreateAnnuncioViewModel(
             categoria = categoria,
             condizioni = condizioni,
             immagini = immagini,
+            pdfUri = pdfUri ?: oldAnnuncio.pdfUri,
             latitudine = posizioneAttuale?.latitudine ?: oldAnnuncio.latitudine,
             longitudine = posizioneAttuale?.longitudine ?: oldAnnuncio.longitudine,
             indirizzo = posizioneAttuale?.indirizzo ?: oldAnnuncio.indirizzo,

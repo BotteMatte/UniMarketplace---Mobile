@@ -18,7 +18,7 @@ class AnnuncioDetailViewModel(
     private val preferitiRepository: PreferitiRepository,
     private val userRepository: UserRepository,
     private val badgeManager: BadgeManager,
-    private val sessionManager: SessionManager
+    val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _annuncio = MutableStateFlow<Annuncio?>(null)

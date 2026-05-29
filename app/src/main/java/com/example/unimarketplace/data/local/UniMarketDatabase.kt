@@ -17,7 +17,7 @@ import com.example.unimarketplace.data.local.entity.*
         BadgeEntity::class,
         NotificationEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
