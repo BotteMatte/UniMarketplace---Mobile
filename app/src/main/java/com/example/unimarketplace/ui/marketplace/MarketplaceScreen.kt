@@ -63,6 +63,7 @@ fun MarketplaceScreen(
     val categoriaSelezionata by marketplaceViewModel.categoriaSelezionata.collectAsState()
     val condizioniSelezionate by marketplaceViewModel.condizioniSelezionate.collectAsState()
     val prezzoMassimo by marketplaceViewModel.prezzoMassimo.collectAsState()
+    val maxPriceLimit by marketplaceViewModel.maxPriceLimit.collectAsState()
 
     // lista filtrata dal ViewModel
     val annunci by marketplaceViewModel.annunciFiltrati.collectAsState()
@@ -365,7 +366,7 @@ fun MarketplaceScreen(
                                             Slider(
                                                 value = prezzoMassimo,
                                                 onValueChange = { marketplaceViewModel.setPrezzoMassimo(it) },
-                                                valueRange = 0f..200f,
+                                                valueRange = 0f..maxPriceLimit,
                                                 modifier = Modifier.weight(1f),
                                                 colors = SliderDefaults.colors(
                                                     thumbColor = Color.White,
@@ -406,9 +407,9 @@ fun MarketplaceScreen(
                                             modifier = Modifier.height(28.dp)
                                         )
                                     }
-                                    if (prezzoMassimo < 200f) {
+                                    if (prezzoMassimo < maxPriceLimit) {
                                         AssistChip(
-                                            onClick = { marketplaceViewModel.setPrezzoMassimo(200f) },
+                                            onClick = { marketplaceViewModel.setPrezzoMassimo(maxPriceLimit) },
                                             label = { Text("Max €${prezzoMassimo.toInt()}", fontSize = 11.sp) },
                                             trailingIcon = {
                                                 Icon(Icons.Default.Close, contentDescription = "Rimuovi", modifier = Modifier.size(14.dp))

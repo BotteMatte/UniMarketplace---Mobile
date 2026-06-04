@@ -43,8 +43,11 @@ class MarketplaceViewModel(
     private val _condizioniSelezionate = MutableStateFlow("Tutte")
     val condizioniSelezionate: StateFlow<String> = _condizioniSelezionate.asStateFlow()
 
-    private val _prezzoMassimo = MutableStateFlow(200f)
+    private val _prezzoMassimo = MutableStateFlow(1000f)
     val prezzoMassimo: StateFlow<Float> = _prezzoMassimo.asStateFlow()
+
+    private val _maxPriceLimit = MutableStateFlow(1000f)
+    val maxPriceLimit: StateFlow<Float> = _maxPriceLimit.asStateFlow()
 
     private val _queryRicerca = MutableStateFlow("")
     val queryRicerca: StateFlow<String> = _queryRicerca.asStateFlow()
@@ -62,6 +65,17 @@ class MarketplaceViewModel(
         viewModelScope.launch {
             repository.getAllAnnunci().collect { lista ->
                 _allAnnunci.value = lista
+                val maxInDb = lista.maxOfOrNull { it.prezzo }?.toFloat() ?: 200f
+                // Arrotonda per eccesso alla decina per avere un limite pulito sul cursore
+                val roundedMax = (Math.ceil(maxInDb.toDouble() / 10.0) * 10).toFloat().coerceAtLeast(10f)
+                
+                _maxPriceLimit.value = roundedMax
+                
+                // Se il prezzo selezionato è maggiore del nuovo massimo (es. dopo una cancellazione), lo resetta
+                if (_prezzoMassimo.value > roundedMax || _prezzoMassimo.value == 200f || _prezzoMassimo.value == 1000f) {
+                    _prezzoMassimo.value = roundedMax
+                }
+
                 applicaFiltri()
             }
         }
