@@ -506,16 +506,32 @@ fun StatsOverviewSection(totalAds: Int, soldAds: Int, earnings: Double) {
 @Composable
 fun StatCard(modifier: Modifier = Modifier, label: String, value: String, color: Color) {
     Card(
-        modifier = modifier,
+        modifier = modifier.height(80.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f))
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(text = label, fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
-            Text(text = value, fontSize = 20.sp, color = color, fontWeight = FontWeight.Bold)
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                lineHeight = 14.sp
+            )
+            Text(
+                text = value,
+                fontSize = 18.sp,
+                color = color,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
