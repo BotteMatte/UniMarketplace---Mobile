@@ -64,6 +64,7 @@ fun AnnuncioDetailScreen(
 
     // conferma eliminazione
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showMarkSoldDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(annuncioId) {
         viewModel.loadAnnuncio(annuncioId)
@@ -110,6 +111,34 @@ fun AnnuncioDetailScreen(
             },
             icon = {
                 Icon(Icons.Default.Warning, contentDescription = null, tint = Color.Red)
+            }
+        )
+    }
+
+    // alert di conferma per segnare come venduto
+    if (showMarkSoldDialog) {
+        AlertDialog(
+            onDismissRequest = { showMarkSoldDialog = false },
+            title = { Text("Conferma vendita") },
+            text = { Text("Sei sicuro di voler segnare questo articolo come venduto? L'operazione non può essere annullata.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.segnaComeVenduto()
+                        showMarkSoldDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF10B981))
+                ) {
+                    Text("Conferma")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showMarkSoldDialog = false }) {
+                    Text("Annulla")
+                }
+            },
+            icon = {
+                Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF10B981))
             }
         )
     }
@@ -186,7 +215,7 @@ fun AnnuncioDetailScreen(
                                 }
                                 // pulsante prenotazione venduto
                                 Button(
-                                    onClick = { viewModel.segnaComeVenduto() },
+                                    onClick = { showMarkSoldDialog = true },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
                                 ) {

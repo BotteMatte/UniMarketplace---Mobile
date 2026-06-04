@@ -49,6 +49,7 @@ fun ProfileScreen(
     val unreadCount by viewModel.unreadCount.collectAsState()
     val notifications by viewModel.notifications.collectAsState()
     var showNotifications by remember { mutableStateOf(false) }
+    var annuncioToMarkSold by remember { mutableStateOf<Annuncio?>(null) }
 
     // dialog per notifiche
     if (showNotifications) {
@@ -99,6 +100,34 @@ fun ProfileScreen(
                     }) { Text("Segna tutte lette") }
                     TextButton(onClick = { showNotifications = false }) { Text("Chiudi") }
                 }
+            }
+        )
+    }
+
+    // dialog di conferma per segnare come venduto
+    if (annuncioToMarkSold != null) {
+        AlertDialog(
+            onDismissRequest = { annuncioToMarkSold = null },
+            title = { Text("Conferma vendita") },
+            text = { Text("Sei sicuro di voler segnare '${annuncioToMarkSold?.titolo}' come venduto? L'operazione non può essere annullata.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        annuncioToMarkSold?.let { viewModel.segnaComeVenduto(it) }
+                        annuncioToMarkSold = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF10B981))
+                ) {
+                    Text("Conferma")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { annuncioToMarkSold = null }) {
+                    Text("Annulla")
+                }
+            },
+            icon = {
+                Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF10B981))
             }
         )
     }
@@ -243,7 +272,7 @@ fun ProfileScreen(
                             annuncio = annuncio,
                             onEdit = { onNavigateToEdit(annuncio.id) },
                             onDelete = { viewModel.eliminaAnnuncio(annuncio) },
-                            onMarkAsSold = { viewModel.segnaComeVenduto(annuncio) },
+                            onMarkAsSold = { annuncioToMarkSold = annuncio },
                             onClick = { onNavigateToDetail(annuncio.id) }
                         )
                     }
