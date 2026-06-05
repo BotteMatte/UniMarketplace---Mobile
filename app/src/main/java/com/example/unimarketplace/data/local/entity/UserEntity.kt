@@ -8,5 +8,5 @@ data class UserEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val fullName: String,
     val email: String,
-    val password: String // Nota: in una vera app la password andrebbe hashata
+    val password: String
 )
